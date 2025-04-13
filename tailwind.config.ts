@@ -1,12 +1,13 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
 	darkMode: ["class"],
 	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
+		"./pages/**/*.{js,jsx}",
+		"./components/**/*.{js,jsx}",
+		"./app/**/*.{js,jsx}",
+		"./src/**/*.{js,jsx}",
 	],
 	prefix: "",
 	theme: {
@@ -52,15 +53,29 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				purple: {
+					50: '#F2EEFF',
+					100: '#E5DDFF',
+					200: '#C7BBFF',
+					300: '#A999FF',
+					400: '#8B77FF',
+					500: '#6E55FF',
+					600: '#5844CC',
+					700: '#423399',
+					800: '#2C2266',
+					900: '#161133',
+				},
+				orange: {
+					50: '#FFF8E6',
+					100: '#FFF1CC',
+					200: '#FFE299',
+					300: '#FFD466',
+					400: '#FFC533',
+					500: '#FFB700',
+					600: '#CC9200',
+					700: '#996E00',
+					800: '#664900',
+					900: '#332500',
 				}
 			},
 			borderRadius: {
