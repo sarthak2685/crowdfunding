@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  
   
   // Check if we were redirected from another page
   const from = location.state?.from || '/dashboard';
@@ -34,7 +36,7 @@ const Login = () => {
       setError('');
       setIsLoading(true);
   
-      const data = await login({ email, password });
+      const data = await login(email, password);
   
       if (data?.user?.role === 'admin') {
         navigate('/admin', { replace: true });
