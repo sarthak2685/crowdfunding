@@ -204,15 +204,15 @@ const AdminDashboard = () => {
         }
     };
     return (
-        <div className="bg-[#F9F9F9] min-h-screen">
+        <div className="bg-soft-white min-h-screen">
             {/* Header/Navbar would go here with forest green background */}
 
             <div className="container mx-auto px-4 py-8">
-                <div className="mb-8 bg-[#FAF3DD] p-6 rounded-lg">
-                    <h1 className="text-2xl font-bold mb-2 text-[#1B1B1E]">
+                <div className="mb-8 bg-warm-beige p-6 rounded-lg">
+                    <h1 className="text-2xl font-bold mb-2 text-charcoal">
                         Admin Dashboard
                     </h1>
-                    <p className="text-[#1B1B1E]/80">
+                    <p className="text-charcoal/80">
                         Monitor and manage platform activity and performance.
                     </p>
                 </div>
@@ -222,7 +222,7 @@ const AdminDashboard = () => {
                     <Card className="border-[#95D5B2]">
                         <CardContent className="p-6">
                             <div className="flex items-center">
-                                <div className="h-12 w-12 bg-[#95D5B2]/20 rounded-full flex items-center justify-center mr-4">
+                                <div className="h-12 w-12 bg-mint-green/20 rounded-full flex items-center justify-center mr-4">
                                     <TrendingUp
                                         size={24}
                                         className="text-[#2D6A4F]"

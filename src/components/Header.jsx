@@ -40,7 +40,9 @@ const Header = () => {
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                scrolled ? "bg-white shadow-md py-2" : "bg-transparent py-4"
+                scrolled
+                    ? "bg-soft-white shadow-md py-2"
+                    : "bg-forest-green py-4"
             }`}
         >
             <div className="container mx-auto px-4 md:px-6">
@@ -49,15 +51,15 @@ const Header = () => {
                     <Link to="/" className="flex items-center space-x-2">
                         <span
                             className={`font-bold text-xl ${
-                                scrolled ? "text-primary" : "text-white"
+                                scrolled ? "text-charcoal" : "text-soft-white"
                             }`}
                         >
                             Fund
                             <span
                                 className={
                                     scrolled
-                                        ? "text-secondary"
-                                        : "text-orange-300"
+                                        ? "text-deep-emerald"
+                                        : "text-mint-green"
                                 }
                             >
                                 Together
@@ -67,73 +69,61 @@ const Header = () => {
 
                     {/* Desktop Nav */}
                     <nav className="hidden md:flex items-center space-x-6">
-                        <Link
-                            to="/"
-                            className={`${
-                                scrolled
-                                    ? "text-gray-700 hover:text-primary"
-                                    : "text-white hover:text-orange-300"
-                            } transition`}
-                        >
-                            Home
-                        </Link>
-                        <Link
-                            to="/#campaigns"
-                            className={`${
-                                scrolled
-                                    ? "text-gray-700 hover:text-primary"
-                                    : "text-white hover:text-orange-300"
-                            } transition`}
-                        >
-                            Campaigns
-                        </Link>
-                        <Link
-                            to="/#how-it-works"
-                            className={`${
-                                scrolled
-                                    ? "text-gray-700 hover:text-primary"
-                                    : "text-white hover:text-orange-300"
-                            } transition`}
-                        >
-                            How It Works
-                        </Link>
+                        {[
+                            { label: "Home", path: "/" },
+                            { label: "Campaigns", path: "/campaigns" },
+                            { label: "How It Works", path: "/how-it-works" },
+                        ].map(({ label, path }) => (
+                            <Link
+                                key={label}
+                                to={path}
+                                className={`px-3 py-2 rounded-full transition ${
+                                    scrolled
+                                        ? "text-charcoal hover:bg-mint-green/20 hover:text-deep-emerald"
+                                        : "text-soft-white hover:bg-mint-green/20 hover:text-mint-green"
+                                }`}
+                            >
+                                {label}
+                            </Link>
+                        ))}
 
                         {currentUser ? (
                             <>
                                 <Link
                                     to="/notifications"
-                                    className={`${
+                                    className={`p-2 rounded-full transition ${
                                         scrolled
-                                            ? "text-gray-700"
-                                            : "text-white"
-                                    } hover:text-primary`}
+                                            ? "text-charcoal hover:bg-mint-green/20 hover:text-deep-emerald"
+                                            : "text-soft-white hover:bg-mint-green/20 hover:text-mint-green"
+                                    }`}
                                 >
                                     <Bell size={20} />
                                 </Link>
 
-
                                 <Link to={getDashboardLink()}>
                                     <Button
-                                        variant={
-                                            scrolled ? "outline" : "secondary"
-                                        }
+                                        className={`px-4 py-2 rounded-full transition ${
+                                            scrolled
+                                                ? "bg-forest-green text-white hover:bg-lime-green"
+                                                : "bg-mint-green text-forest-green hover:bg-lime-green hover:text-white"
+                                        }`}
                                     >
                                         Dashboard
                                     </Button>
                                 </Link>
 
-                                <Avatar>
+                                <Avatar className="border-2 border-mint-green">
                                     <AvatarImage
                                         src={currentUser.avatar}
                                         alt="User Avatar"
                                     />
-                                    <AvatarFallback>
+                                    <AvatarFallback className="text-white bg-deep-emerald">
                                         {getInitials()}
                                     </AvatarFallback>
                                 </Avatar>
 
                                 <Button
-                                    variant={scrolled ? "ghost" : "outline"}
+                                    className="px-4 py-2 rounded-full border-coral-red bg-coral-red text-white hover:bg-red-600"
                                     onClick={handleLogout}
                                 >
                                     Logout
@@ -142,20 +132,12 @@ const Header = () => {
                         ) : (
                             <>
                                 <Link to="/login">
-                                    <Button
-                                        variant={
-                                            scrolled ? "outline" : "secondary"
-                                        }
-                                    >
+                                    <Button className="px-4 py-2 rounded-full bg-forest-green text-white hover:bg-lime-green">
                                         Login
                                     </Button>
                                 </Link>
                                 <Link to="/register">
-                                    <Button
-                                        variant={
-                                            scrolled ? "default" : "outline"
-                                        }
-                                    >
+                                    <Button className="px-4 py-2 rounded-full bg-forest-green text-white hover:bg-lime-green">
                                         Sign Up
                                     </Button>
                                 </Link>
@@ -166,8 +148,10 @@ const Header = () => {
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className={`md:hidden ${
-                            scrolled ? "text-gray-700" : "text-white"
+                        className={`p-2 md:hidden rounded-full ${
+                            scrolled
+                                ? "text-charcoal hover:bg-mint-green/20"
+                                : "text-soft-white hover:bg-mint-green/20"
                         }`}
                     >
                         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -177,7 +161,7 @@ const Header = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="fixed inset-0 z-50 bg-white pt-20 px-6">
+                <div className="fixed inset-0 z-50 bg-soft-white pt-20 px-6">
                     <nav className="flex flex-col space-y-4">
                         {["Home", "Campaigns", "How It Works"].map(
                             (label, i) => (
@@ -186,7 +170,7 @@ const Header = () => {
                                     to={`/${label
                                         .toLowerCase()
                                         .replace(/ /g, "-")}`}
-                                    className="text-gray-700 hover:text-primary text-lg py-2"
+                                    className="px-4 py-3 rounded-full text-charcoal hover:bg-mint-green/20 hover:text-forest-green text-lg"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {label}
@@ -194,20 +178,20 @@ const Header = () => {
                             )
                         )}
 
-                        <div className="pt-6 border-t">
+                        <div className="pt-6 border-t border-mint-green">
                             {currentUser ? (
                                 <>
-                                    <div className="flex items-center space-x-3 mb-6">
-                                        <Avatar>
+                                    <div className="flex items-center space-x-3 mb-6 p-4 bg-mint-green/10 rounded-lg">
+                                        <Avatar className="border-2 border-mint-green">
                                             <AvatarImage
                                                 src={currentUser.avatar}
                                             />
-                                            <AvatarFallback>
+                                            <AvatarFallback className="bg-deep-emerald text-white">
                                                 {getInitials()}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-medium">
+                                            <p className="font-medium text-charcoal">
                                                 {currentUser.name}
                                             </p>
                                             <p className="text-sm text-gray-500">
@@ -222,16 +206,13 @@ const Header = () => {
                                                 setMobileMenuOpen(false)
                                             }
                                         >
-                                            <Button
-                                                className="w-full"
-                                                variant="outline"
-                                            >
+                                            <Button className="w-full px-4 py-2 rounded-full bg-forest-green text-white hover:bg-lime-green">
                                                 Dashboard
                                             </Button>
                                         </Link>
                                         <Button
-                                            className="w-full"
-                                            variant="ghost"
+                                            className="w-full px-4 py-2 rounded-full border-coral-red text-coral-red hover:bg-coral-red/10"
+                                            variant="outline"
                                             onClick={() => {
                                                 handleLogout();
                                                 setMobileMenuOpen(false);
@@ -248,7 +229,7 @@ const Header = () => {
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
                                         <Button
-                                            className="w-full"
+                                            className="w-full px-4 py-2 rounded-full border-forest-green text-forest-green hover:bg-mint-green/20"
                                             variant="outline"
                                         >
                                             Login
@@ -258,7 +239,7 @@ const Header = () => {
                                         to="/register"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
-                                        <Button className="w-full">
+                                        <Button className="w-full px-4 py-2 rounded-full bg-forest-green text-white hover:bg-lime-green">
                                             Sign Up
                                         </Button>
                                     </Link>
