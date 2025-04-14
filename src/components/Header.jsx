@@ -52,7 +52,7 @@ const Header = () => {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <span className={`font-bold text-xl ${scrolled ? 'text-primary' : 'text-white'}`}>
-              Fund<span className={scrolled ? 'text-secondary' : 'text-orange-300'}>Together</span>
+              Fund<span className={scrolled ? 'text-secondary' : 'text-orange-300'}>Sure</span>
             </span>
           </Link>
 

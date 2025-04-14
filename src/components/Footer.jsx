@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-6">
               <span className="font-bold text-xl text-white">
-                Fund<span className="text-orange-300">Together</span>
+                Fund<span className="text-orange-300">Sure</span>
               </span>
             </Link>
             <p className="text-gray-400 mb-6">
