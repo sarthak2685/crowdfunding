@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Search, 
   LightbulbIcon, 
@@ -16,26 +17,50 @@ import {
   Heart, 
   TrendingUp, 
   Users, 
-  Landmark 
+  Landmark,
+  Baby,
+  User2, 
 } from 'lucide-react';
+
 
 const LandingPage = () => {
   const [featuredCampaigns, setFeaturedCampaigns] = useState([]);
-  const [categories, setCategories] = useState(['All', 'Education', 'Medical', 'Environment', 'Community', 'Technology']);
+  const [categories, setCategories] = useState(['All', 'Education', 'Medical', 'Environment', 'Community', 'Technology', 'Elderly Care', 'Child Welfare']);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
     const fetchCampaigns = async () => {
       try {
         setIsLoading(true);
-        // This would normally be a fetch to your API
-        // const response = await fetch('http://localhost:5000/api/campaigns');
-        // const data = await response.json();
         
-        // For now, let's use dummy data
-        setTimeout(() => {
+        // Fetch campaigns from the API
+        const apiUrl = `${import.meta.env.VITE_API_URL}/campaigns`;
+        const queryParams = new URLSearchParams();
+        
+        if (selectedCategory !== 'All') {
+          queryParams.append('category', selectedCategory);
+        }
+        
+        if (searchQuery) {
+          queryParams.append('search', searchQuery);
+        }
+        
+        const fullUrl = `${apiUrl}?${queryParams.toString()}`;
+        
+        const response = await fetch(fullUrl);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch campaigns');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setFeaturedCampaigns(data.data);
+        } else {
           const dummyCampaigns = [
             {
               _id: '1',
@@ -87,41 +112,54 @@ const LandingPage = () => {
             },
             {
               _id: '5',
-              title: 'Urban Garden Project',
-              description: 'Transforming vacant lots into productive community gardens to improve food security and community engagement.',
-              imageUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
-              category: 'Community',
-              goalAmount: 30000,
-              raisedAmount: 18000,
-              daysLeft: 20,
-              backers: 95,
-              createdAt: new Date('2023-11-25').toISOString(),
+              title: 'Sunset Haven: Elderly Care Facility',
+              description: 'Creating a comfortable and caring environment for seniors who need specialized attention and community.',
+              imageUrl: 'https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c',
+              category: 'Elderly Care',
+              goalAmount: 80000,
+              raisedAmount: 25000,
+              daysLeft: 40,
+              backers: 85,
+              createdAt: new Date('2023-11-28').toISOString(),
             },
             {
               _id: '6',
-              title: 'Emergency Medical Relief Fund',
-              description: 'Providing urgent medical assistance to families affected by the recent natural disaster.',
-              imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625',
-              category: 'Medical',
-              goalAmount: 200000,
-              raisedAmount: 185000,
-              daysLeft: 5,
-              backers: 520,
-              createdAt: new Date('2023-12-10').toISOString(),
+              title: 'Bright Futures: Child Welfare Center',
+              description: 'Supporting orphaned children with education, healthcare, and a loving community to help them thrive.',
+              imageUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c',
+              category: 'Child Welfare',
+              goalAmount: 60000,
+              raisedAmount: 30000,
+              daysLeft: 25,
+              backers: 120,
+              createdAt: new Date('2023-12-05').toISOString(),
             },
           ];
           
           setFeaturedCampaigns(dummyCampaigns);
-          setIsLoading(false);
-        }, 1000);
+        }
+        
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching campaigns:', error);
+        toast({
+          title: "Error loading campaigns",
+          description: "We couldn't load the campaigns at this time. Please try again later.",
+          variant: "destructive"
+        });
+        
+        // Use dummy data on error
+        const dummyCampaigns = [
+          // ... keep existing code (dummy campaign data)
+        ];
+        
+        setFeaturedCampaigns(dummyCampaigns);
         setIsLoading(false);
       }
     };
     
     fetchCampaigns();
-  }, []);
+  }, [selectedCategory, searchQuery, toast]);
   
   // Filter campaigns by category and search query
   const filteredCampaigns = featuredCampaigns.filter(campaign => {
@@ -139,13 +177,13 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="hero-gradient text-white pt-28 pb-20 md:pt-40 md:pb-32">
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
             Fund Ideas that Change the World
           </h1>
-          <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto animate-fade-in" style={{animationDelay: "0.2s"}}>
             Join our community of changemakers and bring meaningful projects to life through collective funding.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in" style={{animationDelay: "0.4s"}}>
             <Link to="/register">
               <Button size="lg" className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto">
                 Start a Campaign
@@ -163,16 +201,16 @@ const LandingPage = () => {
       {/* Stats Section */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 hover-scale">
+            <div className="text-center p-6 rounded-lg shadow-sm hover:shadow-md transition-all">
               <div className="text-4xl font-bold text-primary mb-2">$1.2M+</div>
               <p className="text-gray-600">Funds Raised</p>
             </div>
-            <div className="text-center">
+            <div className="text-center p-6 rounded-lg shadow-sm hover:shadow-md transition-all">
               <div className="text-4xl font-bold text-primary mb-2">250+</div>
               <p className="text-gray-600">Successful Campaigns</p>
             </div>
-            <div className="text-center">
+            <div className="text-center p-6 rounded-lg shadow-sm hover:shadow-md transition-all">
               <div className="text-4xl font-bold text-primary mb-2">10K+</div>
               <p className="text-gray-600">Community Members</p>
             </div>
@@ -183,7 +221,7 @@ const LandingPage = () => {
       {/* Featured Campaigns Section */}
       <section id="campaigns" className="py-16 bg-gray-50">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-3xl font-bold mb-4">Explore Campaigns</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Discover meaningful projects that need your support. Every contribution makes a difference.
@@ -191,7 +229,7 @@ const LandingPage = () => {
           </div>
           
           {/* Search and Filters */}
-          <div className="mb-10">
+          <div className="mb-10 animate-fade-in" style={{animationDelay: "0.2s"}}>
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -210,7 +248,7 @@ const LandingPage = () => {
                   onValueChange={setSelectedCategory}
                   className="w-full md:w-auto"
                 >
-                  <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full md:w-auto">
+                  <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 w-full md:w-auto">
                     {categories.map(category => (
                       <TabsTrigger 
                         key={category} 
@@ -277,7 +315,7 @@ const LandingPage = () => {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-16 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-3xl font-bold mb-4">How It Works</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Whether you're starting a campaign or supporting one, our platform makes it easy to create change.
@@ -286,7 +324,7 @@ const LandingPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Step 1 */}
-            <div className="text-center">
+            <div className="text-center bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all animate-fade-in" style={{animationDelay: "0.1s"}}>
               <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <LightbulbIcon size={28} className="text-primary" />
               </div>
@@ -297,7 +335,7 @@ const LandingPage = () => {
             </div>
             
             {/* Step 2 */}
-            <div className="text-center">
+            <div className="text-center bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all animate-fade-in" style={{animationDelay: "0.2s"}}>
               <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Users size={28} className="text-primary" />
               </div>
@@ -308,7 +346,7 @@ const LandingPage = () => {
             </div>
             
             {/* Step 3 */}
-            <div className="text-center">
+            <div className="text-center bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all animate-fade-in" style={{animationDelay: "0.3s"}}>
               <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Rocket size={28} className="text-primary" />
               </div>
@@ -319,9 +357,9 @@ const LandingPage = () => {
             </div>
           </div>
           
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 animate-fade-in" style={{animationDelay: "0.4s"}}>
             <Link to="/register">
-              <Button size="lg">Start Your Campaign</Button>
+              <Button size="lg" className="hover-scale">Start Your Campaign</Button>
             </Link>
           </div>
         </div>
@@ -330,7 +368,7 @@ const LandingPage = () => {
       {/* Categories Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-3xl font-bold mb-4">Fund What Matters</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Explore different categories of campaigns or contribute to the causes that resonate with you.
@@ -339,7 +377,7 @@ const LandingPage = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Education Category */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow animate-fade-in" style={{animationDelay: "0.1s"}}>
               <div className="h-36 bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                 <Landmark size={48} className="text-white" />
               </div>
@@ -348,14 +386,21 @@ const LandingPage = () => {
                 <p className="text-gray-600 text-sm mb-4">
                   Support educational initiatives, scholarships, and learning resources.
                 </p>
-                <Link to="/#campaigns" className="text-primary hover:text-primary/80 text-sm font-medium">
+                <Button 
+                  variant="link" 
+                  className="text-primary hover:text-primary/80 p-0 h-auto text-sm font-medium"
+                  onClick={() => {
+                    setSelectedCategory('Education');
+                    document.getElementById('campaigns').scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
                   Explore Education Campaigns →
-                </Link>
+                </Button>
               </div>
             </div>
             
             {/* Medical Category */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow animate-fade-in" style={{animationDelay: "0.2s"}}>
               <div className="h-36 bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center">
                 <Heart size={48} className="text-white" />
               </div>
@@ -364,41 +409,62 @@ const LandingPage = () => {
                 <p className="text-gray-600 text-sm mb-4">
                   Fund medical treatments, healthcare projects, and medical research.
                 </p>
-                <Link to="/#campaigns" className="text-primary hover:text-primary/80 text-sm font-medium">
+                <Button 
+                  variant="link"
+                  className="text-primary hover:text-primary/80 p-0 h-auto text-sm font-medium"
+                  onClick={() => {
+                    setSelectedCategory('Medical');
+                    document.getElementById('campaigns').scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
                   Explore Medical Campaigns →
-                </Link>
+                </Button>
               </div>
             </div>
             
-            {/* Environment Category */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-36 bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center">
-                <TrendingUp size={48} className="text-white" />
+            {/* Elderly Care Category */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow animate-fade-in" style={{animationDelay: "0.3s"}}>
+              <div className="h-36 bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
+                <Users size={48} className="text-white" />
               </div>
               <div className="p-6">
-                <h3 className="font-semibold text-lg mb-2">Environment</h3>
+                <h3 className="font-semibold text-lg mb-2">Elderly Care</h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Support conservation efforts, sustainability projects, and eco-initiatives.
+                  Support initiatives for elderly care, retirement homes, and senior programs.
                 </p>
-                <Link to="/#campaigns" className="text-primary hover:text-primary/80 text-sm font-medium">
-                  Explore Environment Campaigns →
-                </Link>
+                <Button 
+                  variant="link"
+                  className="text-primary hover:text-primary/80 p-0 h-auto text-sm font-medium"
+                  onClick={() => {
+                    setSelectedCategory('Elderly Care');
+                    document.getElementById('campaigns').scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Explore Elderly Care Campaigns →
+                </Button>
               </div>
             </div>
             
-            {/* Community Category */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-36 bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center">
-                <DollarSign size={48} className="text-white" />
+            {/* Child Welfare Category */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow animate-fade-in" style={{animationDelay: "0.4s"}}>
+              <div className="h-36 bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
+                <Baby size={48} className="text-white" />
               </div>
               <div className="p-6">
-                <h3 className="font-semibold text-lg mb-2">Community</h3>
+                <h3 className="font-semibold text-lg mb-2">Child Welfare</h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Fund local initiatives, neighborhood improvements, and social causes.
+                  Support orphanages, child education, and welfare programs for children in need.
                 </p>
-                <Link to="/#campaigns" className="text-primary hover:text-primary/80 text-sm font-medium">
-                  Explore Community Campaigns →
-                </Link>
+                <Button 
+                  variant="link"
+                  className="text-primary hover:text-primary/80 p-0 h-auto text-sm font-medium"
+                  onClick={() => {
+                    setSelectedCategory('Child Welfare');
+                    document.getElementById('campaigns').scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Explore Child Welfare Campaigns →
+                </Button>
               </div>
             </div>
           </div>
@@ -408,7 +474,7 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center animate-fade-in">
             <h2 className="text-3xl font-bold mb-6">
               Ready to Make a Difference?
             </h2>
@@ -417,12 +483,12 @@ const LandingPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link to="/register">
-                <Button size="lg" className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto">
+                <Button size="lg" className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto hover-scale">
                   Create Account
                 </Button>
               </Link>
               <Link to="/login">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto hover-scale">
                   Login
                 </Button>
               </Link>

@@ -1,27 +1,32 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute = ({ children, role }) => {
-  const { currentUser, loading, isAdmin } = useAuth();
+  const { currentUser, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
+  // Show loading spinner while checking authentication
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    </div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  if (!currentUser) {
-    // Redirect to login if user is not authenticated
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname }} />;
   }
 
-  // Check for admin role if required
-  if (role === 'admin' && !isAdmin()) {
-    return <Navigate to="/dashboard" replace />;
+  // If role is specified and user doesn't have that role, redirect to appropriate page
+  if (role && currentUser && role === 'admin' && currentUser.role !== 'admin') {
+    return <Navigate to="/dashboard" />;
   }
 
+  // Render children if authenticated and has appropriate role
   return children;
 };
 
