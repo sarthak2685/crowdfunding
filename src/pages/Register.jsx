@@ -83,7 +83,7 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="text-center">
           <Link to="/" className="text-3xl font-bold">
-            Fund<span className="text-secondary">Together</span>
+            Fund<span className="text-secondary">Sure</span>
           </Link>
           <h1 className="mt-6 text-3xl font-extrabold text-gray-900">
             Create your account
