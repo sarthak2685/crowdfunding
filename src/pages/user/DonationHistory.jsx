@@ -112,31 +112,31 @@ const DonationHistory = () => {
     );
 
     return (
-        <div className="bg-soft-white min-h-screen p-6">
+        <div className="bg-soft-white min-h-screen p-4 sm:p-6">
             <div className="mb-6 bg-warm-beige p-4 rounded-lg">
-                <h1 className="text-2xl font-bold text-charcoal mb-2">
+                <h1 className="text-xl sm:text-2xl font-bold text-charcoal mb-2">
                     Donation History
                 </h1>
-                <p className="text-charcoal/80">
+                <p className="text-sm sm:text-base text-charcoal/80">
                     A record of all your contributions to campaigns.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <Card className="border border-mint-green">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center">
-                            <div className="h-12 w-12 bg-deep-emerald/10 rounded-full flex items-center justify-center mr-4">
+                            <div className="h-10 sm:h-12 w-10 sm:w-12 bg-deep-emerald/10 rounded-full flex items-center justify-center mr-3 sm:mr-4">
                                 <Heart
-                                    size={24}
+                                    size={20}
                                     className="text-deep-emerald"
                                 />
                             </div>
                             <div>
-                                <p className="text-sm text-charcoal/70">
+                                <p className="text-xs sm:text-sm text-charcoal/70">
                                     Total Donations
                                 </p>
-                                <p className="text-2xl font-bold text-charcoal">
+                                <p className="text-xl sm:text-2xl font-bold text-charcoal">
                                     Rs.{totalDonated}
                                 </p>
                             </div>
@@ -144,20 +144,20 @@ const DonationHistory = () => {
                     </CardContent>
                 </Card>
 
-                <Card className=" border border-mint-green">
-                    <CardContent className="p-6">
+                <Card className="border border-mint-green">
+                    <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center">
-                            <div className="h-12 w-12 bg-deep-emerald/10 rounded-full flex items-center justify-center mr-4">
+                            <div className="h-10 sm:h-12 w-10 sm:w-12 bg-deep-emerald/10 rounded-full flex items-center justify-center mr-3 sm:mr-4">
                                 <FileText
-                                    size={24}
+                                    size={20}
                                     className="text-deep-emerald"
                                 />
                             </div>
                             <div>
-                                <p className="text-sm text-charcoal/70">
+                                <p className="text-xs sm:text-sm text-charcoal/70">
                                     Total Campaigns Supported
                                 </p>
-                                <p className="text-2xl font-bold text-charcoal">
+                                <p className="text-xl sm:text-2xl font-bold text-charcoal">
                                     {donations.length}
                                 </p>
                             </div>
@@ -168,18 +168,18 @@ const DonationHistory = () => {
 
             <Card className="bg-soft-white border border-mint-green">
                 <CardHeader>
-                    <CardTitle className="text-charcoal">
+                    <CardTitle className="text-lg sm:text-xl text-charcoal">
                         Your Donations
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center justify-between">
-                        <div className="relative w-full md:w-auto md:min-w-[300px]">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 items-stretch sm:items-center justify-between">
+                        <div className="relative w-full">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 type="text"
                                 placeholder="Search by campaign or receipt..."
-                                className="pl-10 bg-white border border-mint-green text-charcoal"
+                                className="pl-10 bg-white border border-mint-green text-charcoal text-sm sm:text-base"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -187,10 +187,11 @@ const DonationHistory = () => {
 
                         <Button
                             variant="outline"
-                            className="w-full md:w-auto flex flex-wrap rounded-full border-deep-emerald text-deep-emerald bg-deep-emerald/10 hover:bg-lime-green/10 "
+                            className="w-full sm:w-auto flex items-center justify-center rounded-full border-deep-emerald text-deep-emerald bg-deep-emerald/10 hover:bg-lime-green/10 text-sm sm:text-base"
                         >
-                            <Calendar className="mr-2 h-4 w-4" /> Download Tax
-                            Statement
+                            <Calendar className="mr-2 h-4 w-4" /> 
+                            <span className="hidden sm:inline">Download Tax Statement</span>
+                            <span className="sm:hidden">Tax Statement</span>
                         </Button>
                     </div>
 
@@ -205,44 +206,45 @@ const DonationHistory = () => {
                             ))}
                         </div>
                     ) : filteredDonations.length > 0 ? (
-                        <div className="rounded-md border border-mint-green bg-white">
-                            <Table>
-                                <TableHeader className="bg-warm-beige/40 ">
+                        <div className="rounded-md border border-mint-green bg-white overflow-x-auto">
+                            <Table className="min-w-[600px] sm:min-w-full">
+                                <TableHeader className="bg-warm-beige/40">
                                     <TableRow>
-                                        <TableHead className="text-charcoal font-bold">
+                                        <TableHead className="text-xs sm:text-sm text-charcoal font-bold">
                                             Receipt
                                         </TableHead>
-                                        <TableHead className="text-charcoal font-bold">
+                                        <TableHead className="text-xs sm:text-sm text-charcoal font-bold">
                                             Campaign
                                         </TableHead>
-                                        <TableHead className="text-charcoal font-bold">
+                                        <TableHead className="text-xs sm:text-sm text-charcoal font-bold">
                                             Date
                                         </TableHead>
-                                        <TableHead className="text-left text-charcoal font-bold">
+                                        <TableHead className="text-left text-xs sm:text-sm text-charcoal font-bold">
                                             Amount
                                         </TableHead>
-                                        <TableHead className="text-center text-charcoal font-bold">
+                                        <TableHead className="text-center text-xs sm:text-sm text-charcoal font-bold">
                                             View
                                         </TableHead>
-                                        <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {filteredDonations.map((donation) => (
                                         <TableRow key={donation._id}>
-                                            <TableCell className="font-medium text-charcoal">
+                                            <TableCell className="font-medium text-xs sm:text-sm text-charcoal">
                                                 {donation.receipt}
                                             </TableCell>
-                                            <TableCell className="text-charcoal">
-                                                {donation.campaignTitle}
+                                            <TableCell className="text-xs sm:text-sm text-charcoal">
+                                                <span className="line-clamp-1">
+                                                    {donation.campaignTitle}
+                                                </span>
                                             </TableCell>
-                                            <TableCell className="text-charcoal">
+                                            <TableCell className="text-xs sm:text-sm text-charcoal">
                                                 {format(
                                                     new Date(donation.date),
                                                     "MMM d, yyyy"
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-left font-medium text-charcoal">
+                                            <TableCell className="text-left font-medium text-xs sm:text-sm text-charcoal">
                                                 Rs.{donation.amount}
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -252,13 +254,13 @@ const DonationHistory = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="flex flex-wrap text-deep-emerald hover:bg-lime-green hover:text-black rounded-full"
+                                                        className="flex items-center text-deep-emerald hover:bg-lime-green hover:text-black rounded-full text-xs sm:text-sm"
                                                     >
                                                         <ExternalLink
-                                                            size={16}
-                                                            className="mr-1"
-                                                        />{" "}
-                                                        View
+                                                            size={14}
+                                                            className="mr-1 sm:mr-2"
+                                                        />
+                                                        <span className="hidden sm:inline">View</span>
                                                     </Button>
                                                 </Link>
                                             </TableCell>
@@ -268,14 +270,14 @@ const DonationHistory = () => {
                             </Table>
                         </div>
                     ) : (
-                        <div className="text-center py-10">
-                            <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Heart size={24} className="text-gray-400" />
+                        <div className="text-center py-6 sm:py-10">
+                            <div className="h-14 sm:h-16 w-14 sm:w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                <Heart size={20} className="text-gray-400" />
                             </div>
-                            <h3 className="text-xl font-medium text-charcoal mb-2">
+                            <h3 className="text-lg sm:text-xl font-medium text-charcoal mb-1 sm:mb-2">
                                 No donations found
                             </h3>
-                            <p className="text-gray-500 mb-6">
+                            <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
                                 {searchQuery
                                     ? "No donations matched your search criteria."
                                     : "You haven't made any donations yet."}
@@ -284,13 +286,13 @@ const DonationHistory = () => {
                                 <Button
                                     variant="outline"
                                     onClick={() => setSearchQuery("")}
-                                    className="text-deep-emerald hover:bg-lime-green hover:text-black"
+                                    className="text-xs sm:text-sm text-deep-emerald hover:bg-lime-green hover:text-black"
                                 >
                                     Clear Search
                                 </Button>
                             ) : (
                                 <Link to="/">
-                                    <Button className="bg-deep-emerald hover:bg-lime-green text-white hover:text-black">
+                                    <Button className="bg-deep-emerald hover:bg-lime-green text-white hover:text-black text-xs sm:text-sm">
                                         Browse Campaigns
                                     </Button>
                                 </Link>
