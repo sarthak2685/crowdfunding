@@ -51,7 +51,7 @@ const UserLayout = () => {
             <div className="md:hidden bg-forest-green shadow-sm py-4 px-6 flex justify-between items-center">
                 <Link to="/" className="flex items-center space-x-2">
                     <span className="font-bold text-xl text-white">
-                        Fund<span className="text-mint-green">Together</span>
+                        Fund<span className="text-mint-green">Sure</span>
                     </span>
                 </Link>
                 <button
@@ -118,7 +118,7 @@ const UserLayout = () => {
                             <span className="font-bold text-xl text-forest-green">
                                 Fund
                                 <span className="text-mint-green">
-                                    Together
+                                    Sure
                                 </span>
                             </span>
                         </Link>
