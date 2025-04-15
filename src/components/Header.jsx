@@ -62,7 +62,7 @@ const Header = () => {
                                         : "text-mint-green"
                                 }
                             >
-                                Sure
+                                Together
                             </span>
                         </span>
                     </Link>
