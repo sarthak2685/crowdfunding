@@ -136,13 +136,23 @@ const LandingPage = () => {
                 }, 1000);
             } catch (error) {
                 console.error("Error fetching campaigns:", error);
+
                 toast({
-                    title: "Error loading campaigns",
-                    description:
-                        "We couldn't load the campaigns at this time. Please try again later.",
+                    title: "🚫 Failed to Load Campaigns",
+                    description: "We couldn't load the campaigns right now. Please try again in a few moments.",
                     variant: "destructive",
+                    duration: 5000,
+                    className: "bg-red-600 text-white border-none shadow-lg",
+                    style: {
+                        position: "fixed",
+                        top: "1rem",
+                        right: "1rem",
+                        zIndex: 9999,
+                    },
                 });
+
                 setIsLoading(false);
+
             }
         };
 

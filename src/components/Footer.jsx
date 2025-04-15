@@ -23,7 +23,7 @@ const Footer = () => {
                             <span className="font-bold text-2xl text-white">
                                 Fund
                                 <span className="text-mint-green">
-                                    Together
+                                    Sure
                                 </span>
                             </span>
                         </Link>

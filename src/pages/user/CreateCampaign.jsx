@@ -194,28 +194,54 @@ const CreateCampaign = () => {
 
             if (result.success) {
                 toast({
-                    title: "Campaign Created Successfully",
-                    description:
-                        "Your campaign has been created and is pending approval.",
-                });
+                    title: "🎉 Campaign Created!",
+                    description: "Your campaign has been created and is pending approval.",
+                    variant: "success", // Assuming your toast supports 'success' variant
+                    duration: 4000,
+                    className: "bg-green-600 text-white border-none shadow-xl",
+                    style: {
+                      position: "fixed",
+                      top: "1rem",
+                      right: "1rem",
+                      zIndex: 9999,
+                    },
+                  });
+                  
 
                 navigate("/dashboard");
             } else {
                 toast({
-                    title: "Failed to Create Campaign",
-                    description:
-                        result.message ||
-                        "Something went wrong. Please try again.",
-                    variant: "destructive",
-                });
+                    title: "❌ Failed to Create Campaign",
+                    description: result.message || "Something went wrong. Please try again.",
+                    variant: "destructive", // Ensures red styling if you're using shadcn/ui
+                    duration: 5000,
+                    className: "bg-red-600 text-white border-none shadow-xl",
+                    style: {
+                      position: "fixed",
+                      top: "1rem",
+                      right: "1rem",
+                      zIndex: 9999,
+                    },
+                  });
+                  
             }
         } catch (error) {
             console.error("Error creating campaign:", error);
-            toast({
-                title: "Error",
-                description: "There was a problem connecting to the server.",
-                variant: "destructive",
-            });
+
+toast({
+  title: "⚠️ Server Error",
+  description: "There was a problem connecting to the server. Please try again shortly.",
+  variant: "destructive",
+  duration: 5000,
+  className: "bg-red-600 text-white border-none shadow-xl",
+  style: {
+    position: "fixed",
+    top: "1rem",
+    right: "1rem",
+    zIndex: 9999,
+  },
+});
+
         } finally {
             setIsSubmitting(false);
         }

@@ -109,11 +109,19 @@ const CampaignDetails = () => {
                 console.error("Error fetching campaign:", error);
                 setIsLoading(false);
                 toast({
+                    title: "🚫 Error Loading Campaign",
+                    description: "Failed to load campaign details. Please try again.",
                     variant: "destructive",
-                    title: "Error",
-                    description:
-                        "Failed to load campaign details. Please try again.",
-                });
+                    duration: 5000,
+                    className: "bg-red-600 text-white border-none shadow-xl",
+                    style: {
+                      position: "fixed",
+                      top: "1rem",
+                      right: "1rem",
+                      zIndex: 9999,
+                    },
+                  });
+                  
             }
         };
 
@@ -156,22 +164,39 @@ const CampaignDetails = () => {
                 setIsDonating(false);
 
                 toast({
-                    title: "Thank you for your donation!",
+                    title: "🙏 Thank You for Your Donation!",
                     description: `You have successfully donated ₹${donationAmount} to this campaign.`,
+                    variant: "success", // If your system supports success variant
                     duration: 5000,
-                });
+                    className: "bg-green-600 text-white border-none shadow-xl",
+                    style: {
+                      position: "fixed",
+                      top: "1rem",
+                      right: "1rem",
+                      zIndex: 9999,
+                    },
+                  });
+                  
             }, 3000);
         } catch (error) {
             console.error("Donation error:", error);
             setIsDonating(false);
             toast({
-                variant: "destructive",
-                title: "Donation failed",
+                title: "❌ Donation Failed",
                 description:
-                    error.message ||
-                    "There was an error processing your donation. Please try again.",
+                  error.message ||
+                  "There was an error processing your donation. Please try again.",
+                variant: "destructive",
                 duration: 5000,
-            });
+                className: "bg-red-600 text-white border-none shadow-xl",
+                style: {
+                  position: "fixed",
+                  top: "1rem",
+                  right: "1rem",
+                  zIndex: 9999,
+                },
+              });
+              
         }
     };
 
@@ -187,10 +212,18 @@ const CampaignDetails = () => {
         } else {
             navigator.clipboard.writeText(window.location.href);
             toast({
-                title: "Link copied!",
-                description: "Campaign link copied to clipboard",
+                title: "🔗 Link Copied!",
+                description: "Campaign link copied to clipboard.",
                 duration: 3000,
-            });
+                className: "bg-zinc-800 text-white border-none shadow-xl",
+                style: {
+                  position: "fixed",
+                  top: "1rem",
+                  right: "1rem",
+                  zIndex: 9999,
+                },
+              });
+              
         }
     };
 
