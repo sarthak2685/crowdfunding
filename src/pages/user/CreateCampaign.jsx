@@ -196,13 +196,15 @@ const CreateCampaign = () => {
                 toast({
                     title: "🎉 Campaign Created!",
                     description: "Your campaign has been created and is pending approval.",
-                    variant: "success", // Assuming your toast supports 'success' variant
+                    variant: "success",
                     duration: 4000,
                     className: "bg-green-600 text-white border-none shadow-xl",
                     style: {
                       position: "fixed",
                       top: "1rem",
                       right: "1rem",
+                      width: "30%", 
+                      maxWidth: "400px",
                       zIndex: 9999,
                     },
                   });
@@ -213,13 +215,15 @@ const CreateCampaign = () => {
                 toast({
                     title: "❌ Failed to Create Campaign",
                     description: result.message || "Something went wrong. Please try again.",
-                    variant: "destructive", // Ensures red styling if you're using shadcn/ui
+                    variant: "warning", // For shadcn/ui red styling
                     duration: 5000,
-                    className: "bg-red-600 text-white border-none shadow-xl",
+                    className: "bg-amber-600  text-white border-none shadow-xl",
                     style: {
                       position: "fixed",
                       top: "1rem",
                       right: "1rem",
+                      width: "30%", // Takes 20% of screen width
+                      maxWidth: "400px", // Optional: Prevents excessive width on large screens
                       zIndex: 9999,
                     },
                   });
@@ -228,19 +232,21 @@ const CreateCampaign = () => {
         } catch (error) {
             console.error("Error creating campaign:", error);
 
-toast({
-  title: "⚠️ Server Error",
-  description: "There was a problem connecting to the server. Please try again shortly.",
-  variant: "destructive",
-  duration: 5000,
-  className: "bg-red-600 text-white border-none shadow-xl",
-  style: {
-    position: "fixed",
-    top: "1rem",
-    right: "1rem",
-    zIndex: 9999,
-  },
-});
+            toast({
+                title: "⚠️ Server Error",
+                description: "There was a problem connecting to the server. Please try again shortly.",
+                variant: "destructive",
+                duration: 5000,
+                className: "bg-red-600 text-white border-none shadow-xl",
+                style: {
+                  position: "fixed",
+                  top: "1rem",
+                  right: "1rem",
+                  width: "30%",        // 20% of parent width
+                  maxWidth: "400px",   // Caps width on large screens
+                  zIndex: 9999,
+                },
+              });
 
         } finally {
             setIsSubmitting(false);
