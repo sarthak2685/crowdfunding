@@ -52,91 +52,45 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        // Simulate API call with dummy data
-        setTimeout(() => {
-          const dummyStats = {
-            totalCampaigns: 250,
-            pendingApprovals: 12,
-            totalUsers: 1250,
-            totalDonations: 120000,
-          };
-
-          const dummyRecentCampaigns = [
-            {
-              _id: "1",
-              title: "Clean Water Initiative",
-              creator: "Sarah Johnson",
-              createdAt: new Date("2024-03-15").toISOString(),
-              status: "active",
-              raisedAmount: 32500,
-              goalAmount: 50000,
-            },
-            {
-              _id: "2",
-              title: "Educational Scholarships",
-              creator: "Michael Torres",
-              createdAt: new Date("2024-03-12").toISOString(),
-              status: "active",
-              raisedAmount: 45000,
-              goalAmount: 75000,
-            },
-            {
-              _id: "3",
-              title: "Community Health Clinic",
-              creator: "Robert Chen",
-              createdAt: new Date("2024-03-10").toISOString(),
-              status: "active",
-              raisedAmount: 87500,
-              goalAmount: 100000,
-            },
-            {
-              _id: "4",
-              title: "Tech Innovation Hub",
-              creator: "Jessica Williams",
-              createdAt: new Date("2024-03-05").toISOString(),
-              status: "active",
-              raisedAmount: 60000,
-              goalAmount: 120000,
-            },
-            {
-              _id: "5",
-              title: "Art Education for Children",
-              creator: "David Thompson",
-              createdAt: new Date("2024-03-01").toISOString(),
-              status: "pending",
-              raisedAmount: 0,
-              goalAmount: 25000,
-            },
-          ];
-
-          const dummyFundraisingData = [
-            { month: "Jan", donations: 6500 },
-            { month: "Feb", donations: 8900 },
-            { month: "Mar", donations: 12000 },
-            { month: "Apr", donations: 9800 },
-            { month: "May", donations: 15500 },
-            { month: "Jun", donations: 18000 },
-            { month: "Jul", donations: 14000 },
-            { month: "Aug", donations: 21000 },
-            { month: "Sep", donations: 26000 },
-            { month: "Oct", donations: 22000 },
-            { month: "Nov", donations: 19000 },
-            { month: "Dec", donations: 28000 },
-          ];
-
-          setStats(dummyStats);
-          setRecentCampaigns(dummyRecentCampaigns);
-          setFundraisingData(dummyFundraisingData);
-          setIsLoading(false);
-        }, 1000);
+  
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/dashboard`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+  
+        const data = await response.json();
+        console.log(data.data)
+  
+        // Assuming your backend sends:
+        // {
+        //   stats: {...},
+        //   recentCampaigns: [...],
+        //   fundraisingData: [...]
+        // }
+        setStats(data.data);
+        setRecentCampaigns(data.data.recentCampaigns);
+        setFundraisingData(data.fundraisingData);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error('Error fetching dashboard data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message || 'Failed to load dashboard data',
+          duration: 4000,
+        });
+      } finally {
         setIsLoading(false);
       }
     };
-
+  
     fetchDashboardData();
   }, []);
+  
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -387,40 +341,38 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <div>
-                  {recentCampaigns.filter(
-                    (campaign) => campaign.status === "pending"
-                  ).length > 0 ? (
-                    <div className="space-y-2 sm:space-y-3">
-                      {recentCampaigns
-                        .filter((campaign) => campaign.status === "pending")
-                        .map((campaign) => (
-                          <div
-                            key={campaign._id}
-                            className="flex items-center justify-between border-b border-[#95D5B2]/30 pb-2 sm:pb-3 last:border-0 last:pb-0"
-                          >
-                            <div className="max-w-[70%]">
-                              <p className="text-sm sm:text-base font-medium text-[#1B1B1E] truncate">
-                                {campaign.title}
-                              </p>
-                              <p className="text-xs text-[#1B1B1E]/80 truncate">
-                                by {campaign.creator} •{" "}
-                                {format(
-                                  new Date(campaign.createdAt),
-                                  "MMM d, yyyy"
-                                )}
-                              </p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-[#EF476F] text-[#EF476F] hover:bg-[#EF476F]/10 h-8"
-                            >
-                              <Eye size={14} className="mr-1" />
-                              <span className="hidden xs:inline">View</span>
-                            </Button>
-                          </div>
-                        ))}
-                    </div>
+  {Array.isArray(recentCampaigns) &&
+  recentCampaigns.filter((campaign) => campaign.status === "pending").length > 0 ? (
+    <div className="space-y-2 sm:space-y-3">
+      {recentCampaigns
+        .filter((campaign) => campaign.status === "pending")
+        .map((campaign) => (
+          <div
+            key={campaign._id}
+            className="flex items-center justify-between border-b border-[#95D5B2]/30 pb-2 sm:pb-3 last:border-0 last:pb-0"
+          >
+            <div className="max-w-[70%]">
+              <p className="text-sm sm:text-base font-medium text-[#1B1B1E] truncate">
+                {campaign.title}
+              </p>
+              <p className="text-xs text-[#1B1B1E]/80 truncate">
+                by {campaign.creator} •{" "}
+                {format(new Date(campaign.createdAt), "MMM d, yyyy")}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-[#EF476F] text-[#EF476F] hover:bg-[#EF476F]/10 h-8"
+            >
+              <Eye size={14} className="mr-1" />
+              <span className="hidden xs:inline">View</span>
+            </Button>
+          </div>
+        ))}
+    </div>
+  
+
                   ) : (
                     <div className="text-center py-6 sm:py-10">
                       <p className="text-sm sm:text-base text-[#1B1B1E]/80 mb-3 sm:mb-4">
@@ -512,8 +464,8 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recentCampaigns.map((campaign) => (
-                          <TableRow
+                      {Array.isArray(recentCampaigns) &&
+  recentCampaigns.map((campaign) => (                          <TableRow
                             key={campaign._id}
                             className="hover:bg-[#95D5B2]/10"
                           >
@@ -613,9 +565,10 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recentCampaigns
-                          .filter((campaign) => campaign.status === "active")
-                          .map((campaign) => (
+                      {Array.isArray(recentCampaigns) &&
+  recentCampaigns
+    .filter((campaign) => campaign.status === "active")
+    .map((campaign) => (
                             <TableRow
                               key={campaign._id}
                               className="hover:bg-[#95D5B2]/10"
@@ -717,9 +670,10 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recentCampaigns
-                          .filter((campaign) => campaign.status === "pending")
-                          .map((campaign) => (
+                      {Array.isArray(recentCampaigns) &&
+  recentCampaigns
+    .filter((campaign) => campaign.status === "pending")
+    .map((campaign) => (
                             <TableRow
                               key={campaign._id}
                               className="hover:bg-[#95D5B2]/10"

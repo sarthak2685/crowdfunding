@@ -14,6 +14,7 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    phone: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +32,7 @@ const Register = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.phone) {
       setError("All fields are required");
       return false;
     }
@@ -63,6 +64,7 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        phone: formData.phone,
       });
 
       setSuccessMessage("Registration successful! You can now log in.");
@@ -135,6 +137,21 @@ const Register = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
+                  className="mt-1 border-mint-green focus:border-deep-emerald"
+                />
+              </div>
+              <div>
+                <label htmlFor="phone" className="text-charcoal">
+                  Phone Number
+                </label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange} 
                   className="mt-1 border-mint-green focus:border-deep-emerald"
                 />
               </div>

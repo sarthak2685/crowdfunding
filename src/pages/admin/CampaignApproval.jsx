@@ -46,95 +46,32 @@ const CampaignApproval = () => {
 
     useEffect(() => {
         const fetchCampaigns = async () => {
-            try {
-                setIsLoading(true);
-                // Simulated API call with dummy data
-                setTimeout(() => {
-                    const dummyCampaigns = [
-                        {
-                            _id: "1",
-                            title: "Clean Water Initiative",
-                            description: "Providing clean drinking water to communities in need through sustainable water filtration systems.",
-                            creator: { name: "Sarah Johnson", email: "sarah@example.com" },
-                            category: "Environment",
-                            goalAmount: 50000,
-                            duration: 30,
-                            createdAt: new Date("2024-03-15").toISOString(),
-                            status: "active",
-                            imageUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-                        },
-                        {
-                            _id: "2",
-                            title: "Educational Scholarships for Underserved Youth",
-                            description: "Funding scholarships for talented students from low-income families to pursue higher education.",
-                            creator: { name: "Michael Torres", email: "michael@example.com" },
-                            category: "Education",
-                            goalAmount: 75000,
-                            duration: 45,
-                            createdAt: new Date("2024-03-12").toISOString(),
-                            status: "pending",
-                            imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
-                        },
-                        {
-                            _id: "3",
-                            title: "Community Health Clinic Expansion",
-                            description: "Expanding our local health clinic to serve more patients with improved facilities and equipment.",
-                            creator: { name: "Robert Chen", email: "robert@example.com" },
-                            category: "Medical",
-                            goalAmount: 100000,
-                            duration: 60,
-                            createdAt: new Date("2024-03-10").toISOString(),
-                            status: "active",
-                            imageUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-                        },
-                        {
-                            _id: "4",
-                            title: "Tech Innovation Hub",
-                            description: "Creating a space for young innovators to develop solutions to local problems using technology.",
-                            creator: { name: "Jessica Williams", email: "jessica@example.com" },
-                            category: "Technology",
-                            goalAmount: 120000,
-                            duration: 90,
-                            createdAt: new Date("2024-03-05").toISOString(),
-                            status: "pending",
-                            imageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
-                        },
-                        {
-                            _id: "5",
-                            title: "Art Education for Children",
-                            description: "Providing art supplies and education to underprivileged children to foster creativity and self-expression.",
-                            creator: { name: "David Thompson", email: "david@example.com" },
-                            category: "Arts",
-                            goalAmount: 25000,
-                            duration: 30,
-                            createdAt: new Date("2024-03-01").toISOString(),
-                            status: "rejected",
-                            rejectionReason: "Insufficient details about the implementation plan and budget allocation.",
-                            imageUrl: "https://images.unsplash.com/photo-1495121553079-4c61bcce1894",
-                        },
-                        {
-                            _id: "6",
-                            title: "Wildlife Conservation Project",
-                            description: "Protecting endangered species through habitat preservation and anti-poaching initiatives.",
-                            creator: { name: "Emily Rodriguez", email: "emily@example.com" },
-                            category: "Environment",
-                            goalAmount: 85000,
-                            duration: 60,
-                            createdAt: new Date("2024-02-28").toISOString(),
-                            status: "pending",
-                            imageUrl: "https://images.unsplash.com/photo-1465379944081-7f47de8d74ac",
-                        },
-                    ];
-                    setCampaigns(dummyCampaigns);
-                    setIsLoading(false);
-                }, 1000);
-            } catch (error) {
-                console.error("Error fetching campaigns:", error);
-                setIsLoading(false);
+          try {
+            setIsLoading(true);
+      
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/campaigns`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+      
+            const data = await response.json();
+      
+            if (response.ok && data) {
+              setCampaigns(data.data);
+            } else {
+              console.error('Failed to fetch campaigns:', data?.message);
             }
+          } catch (error) {
+            console.error('Error fetching campaigns:', error);
+          } finally {
+            setIsLoading(false);
+          }
         };
+      
         fetchCampaigns();
-    }, []);
+      }, []);
+      
 
     const filteredCampaigns = campaigns.filter(
         (campaign) =>
@@ -186,78 +123,117 @@ const CampaignApproval = () => {
 
     const confirmApproval = async () => {
         try {
-            setIsProcessing(true);
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            setCampaigns((prevCampaigns) =>
-                prevCampaigns.map((campaign) =>
-                    campaign._id === selectedCampaign._id
-                        ? { ...campaign, status: "active" }
-                        : campaign
-                )
-            );
-            setIsApproveDialogOpen(false);
-            setSelectedCampaign(null);
-            toast({
-                title: "Campaign approved",
-                description: "The campaign has been approved and is now live.",
-                duration: 3000,
-            });
+          setIsProcessing(true);
+      
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/admin/campaigns/${selectedCampaign._id}/approve`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+      
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to approve campaign');
+          }
+      
+          // Update campaigns state
+          setCampaigns((prevCampaigns) =>
+            prevCampaigns.map((campaign) =>
+              campaign._id === selectedCampaign._id
+                ? { ...campaign, status: 'active' }
+                : campaign
+            )
+          );
+      
+          setIsApproveDialogOpen(false);
+          setSelectedCampaign(null);
+      
+          toast({
+            title: 'Campaign approved',
+            description: 'The campaign has been approved and is now live.',
+            duration: 3000,
+          });
         } catch (error) {
-            console.error("Error approving campaign:", error);
-            toast({
-                variant: "destructive",
-                title: "Approval failed",
-                description: error.message || "There was an error approving the campaign.",
-                duration: 5000,
-            });
+          console.error('Error approving campaign:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Approval failed',
+            description: error.message || 'There was an error approving the campaign.',
+            duration: 5000,
+          });
         } finally {
-            setIsProcessing(false);
+          setIsProcessing(false);
         }
-    };
+      };
+      
 
-    const confirmRejection = async () => {
+      const confirmRejection = async () => {
         if (!rejectionReason.trim()) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Please provide a reason for rejection.",
-                duration: 3000,
-            });
-            return;
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Please provide a reason for rejection.',
+            duration: 3000,
+          });
+          return;
         }
-
+      
         try {
-            setIsProcessing(true);
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            setCampaigns((prevCampaigns) =>
-                prevCampaigns.map((campaign) =>
-                    campaign._id === selectedCampaign._id
-                        ? { ...campaign, status: "rejected", rejectionReason }
-                        : campaign
-                )
-            );
-            setIsRejectDialogOpen(false);
-            setSelectedCampaign(null);
-            setRejectionReason("");
-            toast({
-                title: "Campaign rejected",
-                description: "The campaign has been rejected and the creator has been notified.",
-                duration: 3000,
-            });
+          setIsProcessing(true);
+      
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/admin/campaigns/${selectedCampaign._id}/reject`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ reason: rejectionReason }),
+            }
+          );
+      
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to reject campaign');
+          }
+      
+          // Update campaigns state
+          setCampaigns((prevCampaigns) =>
+            prevCampaigns.map((campaign) =>
+              campaign._id === selectedCampaign._id
+                ? { ...campaign, status: 'rejected', rejectionReason }
+                : campaign
+            )
+          );
+      
+          setIsRejectDialogOpen(false);
+          setSelectedCampaign(null);
+          setRejectionReason('');
+      
+          toast({
+            title: 'Campaign rejected',
+            description: 'The campaign has been rejected and the creator has been notified.',
+            duration: 3000,
+          });
         } catch (error) {
-            console.error("Error rejecting campaign:", error);
-            toast({
-                variant: "destructive",
-                title: "Rejection failed",
-                description: error.message || "There was an error rejecting the campaign.",
-                duration: 5000,
-            });
+          console.error('Error rejecting campaign:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Rejection failed',
+            description: error.message || 'There was an error rejecting the campaign.',
+            duration: 5000,
+          });
         } finally {
-            setIsProcessing(false);
+          setIsProcessing(false);
         }
-    };
+      };
+      
 
     const renderCampaignCards = (campaignsToRender) => {
         return (
@@ -265,12 +241,13 @@ const CampaignApproval = () => {
                 {campaignsToRender.map((campaign) => (
                     <Card key={campaign._id} className="overflow-hidden">
                         <div className="h-40 sm:h-48 overflow-hidden">
-                            <img
-                                src={campaign.imageUrl || "/placeholder.svg"}
-                                alt={campaign.title}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
+  <img
+    src={(campaign.imageUrl && campaign.imageUrl[0]) || "/placeholder.svg"}
+    alt={campaign.title}
+    className="w-full h-full object-cover"
+  />
+</div>
+
                         <CardContent className="p-4 sm:p-6">
                             <div className="flex justify-between items-start mb-3 sm:mb-4">
                                 <h3 className="font-semibold text-base sm:text-lg line-clamp-1">
@@ -658,7 +635,7 @@ const CampaignApproval = () => {
 
                         <div className="grid grid-cols-1 gap-3 sm:gap-4">
                             <img
-                                src={selectedCampaign.imageUrl || "/placeholder.svg"}
+                                src={selectedCampaign.imageUrl[0] || "/placeholder.svg"}
                                 alt={selectedCampaign.title}
                                 className="w-full h-40 sm:h-56 object-cover rounded-md"
                             />
