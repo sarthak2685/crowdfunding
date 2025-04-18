@@ -43,90 +43,32 @@ const CampaignDetails = () => {
 
     useEffect(() => {
         const fetchCampaign = async () => {
-            try {
-                setIsLoading(true);
-                // Simulated fetch with dummy data
-                setTimeout(() => {
-                    const dummyCampaign = {
-                        _id: id,
-                        title: "Clean Water Initiative",
-                        description:
-                            "Providing clean drinking water to communities in need through sustainable water filtration systems.",
-                        longDescription: `
-              <p>Access to clean water is a fundamental human right, yet millions around the world still lack this basic necessity. Our project aims to install sustainable water filtration systems in communities facing severe water scarcity and contamination issues.</p>
-              
-              <p>With your support, we will:</p>
-              <ul>
-                <li>Install 50 water filtration systems in rural communities</li>
-                <li>Train local technicians to maintain the systems</li>
-                <li>Conduct water quality testing and monitoring</li>
-                <li>Educate communities on water conservation and hygiene practices</li>
-              </ul>
-              
-              <p>Each water filtration system can provide clean drinking water for up to 200 people daily, potentially impacting 10,000 individuals in total. The systems are designed to be durable, with minimal maintenance requirements and a lifespan of up to 10 years.</p>
-            `,
-                        imageUrl:
-                            "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-                        category: "Environment",
-                        goalAmount: 50000,
-                        raisedAmount: 32500,
-                        backers: 128,
-                        daysLeft: 15,
-                        createdAt: new Date("2023-12-15").toISOString(),
-                        creator: {
-                            _id: "123",
-                            name: "Sarah Johnson",
-                            profilePic: "https://i.pravatar.cc/150?img=32",
-                        },
-                        updates: [
-                            {
-                                _id: "1",
-                                date: new Date("2024-01-10").toISOString(),
-                                title: "First 10 water filters installed!",
-                                content:
-                                    "We've successfully installed the first 10 water filtration systems in Greenville community.",
-                            },
-                        ],
-                        comments: [
-                            {
-                                _id: "1",
-                                user: {
-                                    name: "Michael Roberts",
-                                    profilePic:
-                                        "https://i.pravatar.cc/150?img=68",
-                                },
-                                date: new Date("2024-01-15").toISOString(),
-                                content:
-                                    "This is an amazing initiative! I've seen firsthand how access to clean water can transform communities.",
-                            },
-                        ],
-                    };
-
-                    setCampaign(dummyCampaign);
-                    setIsLoading(false);
-                }, 1000);
-            } catch (error) {
-                console.error("Error fetching campaign:", error);
-                setIsLoading(false);
-                toast({
-                    title: "🚫 Error Loading Campaign",
-                    description: "Failed to load campaign details. Please try again.",
-                    variant: "destructive",
-                    duration: 5000,
-                    className: "bg-red-600 text-white border-none shadow-xl",
-                    style: {
-                      position: "fixed",
-                      top: "1rem",
-                      right: "1rem",
-                      zIndex: 9999,
-                    },
-                  });
-                  
+          try {
+            setIsLoading(true);
+      
+            const response = await fetch(`http://localhost:5000/api/campaigns/${id}`);
+            const data = await response.json();
+      
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to fetch campaign');
             }
+      
+            setCampaign(data.data); // assuming response format: { success: true, data: { ... } }
+            setIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching campaign:', error);
+            setIsLoading(false);
+            toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Failed to load campaign details. Please try again.',
+            });
+          }
         };
-
+      
         fetchCampaign();
-    }, [id]);
+      }, [id]);
+      
 
     const progress = campaign
         ? Math.min(
@@ -146,59 +88,59 @@ const CampaignDetails = () => {
 
     const handleDonationSubmit = async () => {
         try {
-            setIsDonating(true);
-
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            setPaymentSuccess(true);
-
-            setCampaign((prev) => ({
-                ...prev,
-                raisedAmount: prev.raisedAmount + parseFloat(donationAmount),
-                backers: prev.backers + 1,
-            }));
-
-            setTimeout(() => {
-                setIsDonationDialogOpen(false);
-                setPaymentSuccess(false);
-                setIsDonating(false);
-
-                toast({
-                    title: "🙏 Thank You for Your Donation!",
-                    description: `You have successfully donated ₹${donationAmount} to this campaign.`,
-                    variant: "success", // If your system supports success variant
-                    duration: 5000,
-                    className: "bg-green-600 text-white border-none shadow-xl",
-                    style: {
-                      position: "fixed",
-                      top: "1rem",
-                      right: "1rem",
-                      zIndex: 9999,
-                    },
-                  });
-                  
-            }, 3000);
-        } catch (error) {
-            console.error("Donation error:", error);
+          setIsDonating(true);
+          
+          // Simulate payment processing
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+        //   In a real app, you would call your payment API here
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              campaignId: id,
+              amount: parseFloat(donationAmount)
+            })
+          });
+          
+          if (!response.ok) throw new Error('Payment failed');
+          
+          setPaymentSuccess(true);
+          
+          // Update campaign data after successful donation
+          setCampaign(prev => ({
+            ...prev,
+            raisedAmount: prev.raisedAmount + parseFloat(donationAmount),
+            backers: prev.backers + 1
+          }));
+          
+          // Reset after 3 seconds
+          setTimeout(() => {
+            setIsDonationDialogOpen(false);
+            setPaymentSuccess(false);
             setIsDonating(false);
+            
             toast({
-                title: "❌ Donation Failed",
-                description:
-                  error.message ||
-                  "There was an error processing your donation. Please try again.",
-                variant: "destructive",
-                duration: 5000,
-                className: "bg-red-600 text-white border-none shadow-xl",
-                style: {
-                  position: "fixed",
-                  top: "1rem",
-                  right: "1rem",
-                  zIndex: 9999,
-                },
-              });
-              
+              title: 'Thank you for your donation!',
+              description: `You have successfully donated $${donationAmount} to this campaign.`,
+              duration: 5000,
+            });
+          }, 3000);
+          
+        } catch (error) {
+          console.error('Donation error:', error);
+          setIsDonating(false);
+          toast({
+            variant: 'destructive',
+            title: 'Donation failed',
+            description: error.message || 'There was an error processing your donation. Please try again.',
+            duration: 5000,
+          });
         }
-    };
+      };
 
     const handleShareClick = () => {
         if (navigator.share) {

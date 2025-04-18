@@ -22,86 +22,38 @@ const DonationHistory = () => {
 
     useEffect(() => {
         const fetchDonations = async () => {
-            try {
-                setIsLoading(true);
-                // This would normally be a fetch to your API
-                // const response = await fetch('http://localhost:5000/api/donations', {
-                //   headers: {
-                //     Authorization: `Bearer ${localStorage.getItem('token')}`
-                //   }
-                // });
-                // const data = await response.json();
-
-                // For now, let's use dummy data
-                setTimeout(() => {
-                    const dummyDonations = [
-                        {
-                            _id: "1",
-                            campaignId: "1",
-                            campaignTitle: "Clean Water Initiative",
-                            amount: 250,
-                            date: new Date("2024-01-15").toISOString(),
-                            status: "completed",
-                            receipt: "REC-12345",
-                        },
-                        {
-                            _id: "2",
-                            campaignId: "3",
-                            campaignTitle: "Community Health Clinic Expansion",
-                            amount: 100,
-                            date: new Date("2024-02-05").toISOString(),
-                            status: "completed",
-                            receipt: "REC-12346",
-                        },
-                        {
-                            _id: "3",
-                            campaignId: "5",
-                            campaignTitle: "Urban Garden Project",
-                            amount: 75,
-                            date: new Date("2024-02-20").toISOString(),
-                            status: "completed",
-                            receipt: "REC-12347",
-                        },
-                        {
-                            _id: "4",
-                            campaignId: "2",
-                            campaignTitle:
-                                "Educational Scholarships for Underserved Youth",
-                            amount: 150,
-                            date: new Date("2024-03-10").toISOString(),
-                            status: "completed",
-                            receipt: "REC-12348",
-                        },
-                        {
-                            _id: "5",
-                            campaignId: "6",
-                            campaignTitle: "Emergency Medical Relief Fund",
-                            amount: 200,
-                            date: new Date("2024-03-15").toISOString(),
-                            status: "completed",
-                            receipt: "REC-12349",
-                        },
-                    ];
-
-                    setDonations(dummyDonations);
-
-                    // Calculate total donated
-                    const total = dummyDonations.reduce(
-                        (sum, donation) => sum + donation.amount,
-                        0
-                    );
-                    setTotalDonated(total);
-
-                    setIsLoading(false);
-                }, 1000);
-            } catch (error) {
-                console.error("Error fetching donations:", error);
-                setIsLoading(false);
+          try {
+            setIsLoading(true);
+      
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+      
+            const data = await response.json();
+        
+      
+            if (response.ok && data) {
+              setDonations(data.data);
+      
+              // Calculate total donated
+              const total = data.reduce((sum, donation) => sum + donation.amount, 0);
+              setTotalDonated(total);
+            } else {
+              console.error("Failed to fetch donations:", data?.message);
             }
+      
+          } catch (error) {
+            console.error("Error fetching donations:", error);
+          } finally {
+            setIsLoading(false);
+          }
         };
-
+      
         fetchDonations();
-    }, []);
+      }, []);
+      
 
     const filteredDonations = donations.filter(
         (donation) =>

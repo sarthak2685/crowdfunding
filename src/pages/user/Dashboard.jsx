@@ -25,87 +25,35 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            try {
-                setIsLoading(true);
-                // Simulated fetch
-                setTimeout(() => {
-                    const dummyData = {
-                        stats: {
-                            totalDonated: 750,
-                            campaignsSupported: 5,
-                            campaignsCreated: 2,
-                        },
-                        recentDonations: [
-                            {
-                                _id: "1",
-                                campaignId: "1",
-                                campaignTitle: "Clean Water Initiative",
-                                amount: 250,
-                                date: new Date("2024-01-15").toISOString(),
-                            },
-                            {
-                                _id: "2",
-                                campaignId: "3",
-                                campaignTitle:
-                                    "Community Health Clinic Expansion",
-                                amount: 100,
-                                date: new Date("2024-02-05").toISOString(),
-                            },
-                            {
-                                _id: "3",
-                                campaignId: "5",
-                                campaignTitle: "Urban Garden Project",
-                                amount: 75,
-                                date: new Date("2024-02-20").toISOString(),
-                            },
-                        ],
-                        userCampaigns: [
-                            {
-                                _id: "7",
-                                title: "Education for All",
-                                description:
-                                    "Providing educational resources and support to underserved communities.",
-                                imageUrl:
-                                    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-                                category: "Education",
-                                goalAmount: 20000,
-                                raisedAmount: 5000,
-                                daysLeft: 25,
-                                backers: 42,
-                                createdAt: new Date("2024-01-05").toISOString(),
-                                status: "active",
-                            },
-                            {
-                                _id: "8",
-                                title: "Youth Coding Camp",
-                                description:
-                                    "Teaching coding and technology skills to disadvantaged youth.",
-                                imageUrl:
-                                    "https://images.unsplash.com/photo-1498936178812-4b2e558d2937",
-                                category: "Technology",
-                                goalAmount: 15000,
-                                raisedAmount: 12000,
-                                daysLeft: 5,
-                                backers: 78,
-                                createdAt: new Date("2023-12-10").toISOString(),
-                                status: "active",
-                            },
-                        ],
-                    };
-
-                    setUserStats(dummyData.stats);
-                    setRecentDonations(dummyData.recentDonations);
-                    setUserCampaigns(dummyData.userCampaigns);
-                    setIsLoading(false);
-                }, 1000);
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
-                setIsLoading(false);
+          try {
+            setIsLoading(true);
+      
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/dashboard`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+      
+            const data = await response.json();
+      
+            if (response.ok && data) {
+              setUserStats(data.stats);
+              setRecentDonations(data.recentDonations);
+              setUserCampaigns(data.userCampaigns);
+            } else {
+              console.error("Failed to fetch dashboard data:", data?.message);
             }
+      
+          } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+          } finally {
+            setIsLoading(false);
+          }
         };
-
+      
         fetchDashboardData();
-    }, []);
+      }, []);
+      
 
     return (
         <div className="bg-soft-white min-h-screen p-6">

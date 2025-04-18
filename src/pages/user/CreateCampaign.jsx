@@ -41,16 +41,15 @@ const CreateCampaign = () => {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState("");
+    const [previewImages, setPreviewImages] = useState([]);
+    const [previewVideos, setPreviewVideos] = useState([]);
+    const [uploadedDocuments, setUploadedDocuments] = useState([]);
 
     const categories = [
         "Education",
         "Medical",
         "Environment",
-        "Community",
-        "Technology",
-        "Arts",
-        "Sports",
+        "Animal Welfare",
         "Elderly Care",
         "Child Welfare",
         "Other",
@@ -87,48 +86,36 @@ const CreateCampaign = () => {
         }
     };
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                setErrors({
-                    ...errors,
-                    image: "Image size should not exceed 5MB",
-                });
-                return;
-            }
-
-            const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
-            if (!allowedTypes.includes(file.type)) {
-                setErrors({
-                    ...errors,
-                    image: "Only JPG, JPEG, and PNG images are allowed",
-                });
-                return;
-            }
-
-            setFormData({
-                ...formData,
-                image: file,
-            });
-
-            // Create preview URL
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result);
-            };
-            reader.readAsDataURL(file);
-
-            // Clear error
-            if (errors.image) {
-                setErrors({
-                    ...errors,
-                    image: "",
-                });
-            }
-        }
+    const handleImagesChange = (e) => {
+        const files = Array.from(e.target.files);
+        console.log("images", files);
+        setFormData({
+            ...formData,
+            image: files,
+        });
+        setPreviewImages(files.map(file => URL.createObjectURL(file)));
     };
+    
+    const handleVideosChange = (e) => {
+        const files = Array.from(e.target.files);
+        console.log("videos", files);
+        setFormData({
+            ...formData,
+            videos: files,
+        });
+        setPreviewVideos(files.map(file => URL.createObjectURL(file)));
+    };
+    
+    const handleDocumentsChange = (e) => {
+        const files = Array.from(e.target.files);
+        console.log("files", files);
+        setFormData({
+            ...formData,
+            documents: files,
+        });
+        setUploadedDocuments(files);
+    };
+    
 
     const validateForm = () => {
         const newErrors = {};
@@ -154,7 +141,10 @@ const CreateCampaign = () => {
             newErrors.duration = "Duration must be a positive number";
         }
 
-        if (!formData.image) newErrors.image = "Campaign image is required";
+        if (!formData.image || formData.image.length === 0) newErrors.image = "Campaign image is required";
+        console.log("formData.image", formData.image, formData.videos, formData.documents);
+        if (!formData.videos || formData.videos.length === 0) newErrors.videos = "At least one campaign video is required";
+        if (!formData.documents || formData.documents.length === 0) newErrors.documents = "At least one document is required";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -175,7 +165,19 @@ const CreateCampaign = () => {
             data.append("category", formData.category);
             data.append("goalAmount", formData.goalAmount);
             data.append("duration", formData.duration);
-            data.append("image", formData.image);
+            formData.image?.forEach((file) => {
+                data.append("images", file);
+            });
+    
+            // Append multiple videos
+            formData.videos?.forEach((file) => {
+                data.append("videos", file);
+            });
+    
+            // Append multiple documents
+            formData.documents?.forEach((file) => {
+                data.append("verificationDocument", file);
+            });
 
             const response = await fetch(
                 `${import.meta.env.VITE_API_URL}/campaigns`,
@@ -200,15 +202,15 @@ const CreateCampaign = () => {
                     duration: 4000,
                     className: "bg-green-600 text-white border-none shadow-xl",
                     style: {
-                      position: "fixed",
-                      top: "1rem",
-                      right: "1rem",
-                      width: "30%", 
-                      maxWidth: "400px",
-                      zIndex: 9999,
+                        position: "fixed",
+                        top: "1rem",
+                        right: "1rem",
+                        width: "30%",
+                        maxWidth: "400px",
+                        zIndex: 9999,
                     },
-                  });
-                  
+                });
+
 
                 navigate("/dashboard");
             } else {
@@ -219,15 +221,15 @@ const CreateCampaign = () => {
                     duration: 5000,
                     className: "bg-amber-600  text-white border-none shadow-xl",
                     style: {
-                      position: "fixed",
-                      top: "1rem",
-                      right: "1rem",
-                      width: "30%", // Takes 20% of screen width
-                      maxWidth: "400px", // Optional: Prevents excessive width on large screens
-                      zIndex: 9999,
+                        position: "fixed",
+                        top: "1rem",
+                        right: "1rem",
+                        width: "30%", // Takes 20% of screen width
+                        maxWidth: "400px", // Optional: Prevents excessive width on large screens
+                        zIndex: 9999,
                     },
-                  });
-                  
+                });
+
             }
         } catch (error) {
             console.error("Error creating campaign:", error);
@@ -239,14 +241,14 @@ const CreateCampaign = () => {
                 duration: 5000,
                 className: "bg-red-600 text-white border-none shadow-xl",
                 style: {
-                  position: "fixed",
-                  top: "1rem",
-                  right: "1rem",
-                  width: "30%",        // 20% of parent width
-                  maxWidth: "400px",   // Caps width on large screens
-                  zIndex: 9999,
+                    position: "fixed",
+                    top: "1rem",
+                    right: "1rem",
+                    width: "30%",        // 20% of parent width
+                    maxWidth: "400px",   // Caps width on large screens
+                    zIndex: 9999,
                 },
-              });
+            });
 
         } finally {
             setIsSubmitting(false);
@@ -287,9 +289,8 @@ const CreateCampaign = () => {
                                     name="title"
                                     value={formData.title}
                                     onChange={handleChange}
-                                    className={`focus:border-deep-emerald ${
-                                        errors.title ? "border-coral-red" : ""
-                                    }`}
+                                    className={`focus:border-deep-emerald ${errors.title ? "border-coral-red" : ""
+                                        }`}
                                     placeholder="Enter a catchy title for your campaign"
                                 />
                                 {errors.title && (
@@ -312,11 +313,10 @@ const CreateCampaign = () => {
                                     name="description"
                                     value={formData.description}
                                     onChange={handleChange}
-                                    className={`focus:border-deep-emerald ${
-                                        errors.description
+                                    className={`focus:border-deep-emerald ${errors.description
                                             ? "border-coral-red"
                                             : ""
-                                    }`}
+                                        }`}
                                     placeholder="Provide a brief description (max 500 characters)"
                                     rows={3}
                                 />
@@ -347,9 +347,8 @@ const CreateCampaign = () => {
                                     name="story"
                                     value={formData.story}
                                     onChange={handleChange}
-                                    className={`focus:border-deep-emerald ${
-                                        errors.story ? "border-coral-red" : ""
-                                    }`}
+                                    className={`focus:border-deep-emerald ${errors.story ? "border-coral-red" : ""
+                                        }`}
                                     placeholder="Tell the complete story behind your campaign"
                                     rows={6}
                                 />
@@ -379,11 +378,10 @@ const CreateCampaign = () => {
                                         }
                                     >
                                         <SelectTrigger
-                                            className={`w-full rounded-full border px-4 py-2 text-sm shadow-sm bg-white text-charcoal focus:outline-none focus:ring-2 focus:ring-deep-emerald ${
-                                                errors.category
+                                            className={`w-full rounded-full border px-4 py-2 text-sm shadow-sm bg-white text-charcoal focus:outline-none focus:ring-2 focus:ring-deep-emerald ${errors.category
                                                     ? "border-coral-red"
                                                     : "border-mint-green"
-                                            }`}
+                                                }`}
                                         >
                                             <SelectValue placeholder="Select a category" />
                                         </SelectTrigger>
@@ -426,11 +424,10 @@ const CreateCampaign = () => {
                                         type="number"
                                         value={formData.goalAmount}
                                         onChange={handleChange}
-                                        className={`focus:border-deep-emerald ${
-                                            errors.goalAmount
+                                        className={`focus:border-deep-emerald ${errors.goalAmount
                                                 ? "border-coral-red"
                                                 : ""
-                                        }`}
+                                            }`}
                                         placeholder="Enter your fundraising target"
                                         min="1"
                                     />
@@ -456,11 +453,10 @@ const CreateCampaign = () => {
                                     type="number"
                                     value={formData.duration}
                                     onChange={handleChange}
-                                    className={`focus:border-deep-emerald ${
-                                        errors.duration
+                                    className={`focus:border-deep-emerald ${errors.duration
                                             ? "border-coral-red"
                                             : ""
-                                    }`}
+                                        }`}
                                     placeholder="How many days will your campaign run?"
                                     min="1"
                                     max="90"
@@ -473,65 +469,102 @@ const CreateCampaign = () => {
                             </div>
 
                             {/* Image Upload */}
-                            <div className="space-y-2">
-                                <Label
-                                    htmlFor="image"
-                                    className="text-charcoal"
-                                >
-                                    Campaign Image
-                                </Label>
-                                <div className="flex flex-col gap-4">
+                            <div className="space-y-6">
+                                {/* Multiple Images Upload */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="images" className="text-charcoal">
+                                        Campaign Images
+                                    </Label>
                                     <div
-                                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-soft-white transition-colors ${
-                                            errors.image
-                                                ? "border-coral-red"
-                                                : "border-mint-green"
-                                        }`}
-                                        onClick={() =>
-                                            document
-                                                .getElementById("image")
-                                                .click()
-                                        }
+                                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-soft-white transition-colors ${errors.images ? "border-coral-red" : "border-mint-green"
+                                            }`}
+                                        onClick={() => document.getElementById("images").click()}
                                     >
                                         <input
-                                            id="image"
-                                            name="image"
+                                            id="images"
+                                            name="images"
                                             type="file"
                                             accept="image/jpeg, image/png, image/jpg"
-                                            onChange={handleImageChange}
+                                            multiple
+                                            onChange={handleImagesChange}
                                             className="hidden"
                                         />
                                         <Upload className="w-10 h-10 mx-auto text-mint-green mb-2" />
                                         <p className="text-sm text-charcoal">
-                                            {previewUrl
-                                                ? "Click to change image"
-                                                : "Click to upload an image (JPG, JPEG, PNG)"}
+                                            Click to upload images (JPG, JPEG, PNG)
                                         </p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            Max file size: 5MB
-                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">Max size per file: 5MB</p>
                                     </div>
-
-                                    {previewUrl && (
-                                        <div className="mt-2">
-                                            <p className="text-sm font-medium text-charcoal mb-2">
-                                                Image Preview
-                                            </p>
-                                            <img
-                                                src={previewUrl}
-                                                alt="Campaign preview"
-                                                className="max-h-48 rounded-lg mx-auto"
-                                            />
+                                    {previewImages?.length > 0 && (
+                                        <div className="grid grid-cols-2 gap-4 mt-2">
+                                            {previewImages.map((url, idx) => (
+                                                <img
+                                                    key={idx}
+                                                    src={url}
+                                                    alt={`Preview ${idx + 1}`}
+                                                    className="h-32 w-full object-cover rounded-lg"
+                                                />
+                                            ))}
                                         </div>
                                     )}
+                                    {errors.images && (
+                                        <p className="text-coral-red text-sm">{errors.images}</p>
+                                    )}
+                                </div>
 
-                                    {errors.image && (
-                                        <p className="text-coral-red text-sm">
-                                            {errors.image}
-                                        </p>
+                                {/* Multiple Video Upload */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="videos" className="text-charcoal">
+                                        Campaign Videos
+                                    </Label>
+                                    <input
+                                        id="videos"
+                                        name="videos"
+                                        type="file"
+                                        accept="video/mp4,video/webm"
+                                        multiple
+                                        onChange={handleVideosChange}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-mint-green file:text-white file:rounded-md file:cursor-pointer"
+                                    />
+                                    {previewVideos?.length > 0 && (
+                                        <div className="space-y-2 mt-2">
+                                            {previewVideos.map((url, idx) => (
+                                                <video key={idx} src={url} controls className="w-full rounded-lg" />
+                                            ))}
+                                        </div>
+                                    )}
+                                    {errors.videos && (
+                                        <p className="text-coral-red text-sm">{errors.videos}</p>
+                                    )}
+                                </div>
+
+                                {/* Multiple Document Upload */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="documents" className="text-charcoal">
+                                        Verification Documents (PDF, DOCX)
+                                    </Label>
+                                    <input
+                                        id="documents"
+                                        name="documents"
+                                        type="file"
+                                        accept=".pdf,.doc,.docx"
+                                        multiple
+                                        onChange={handleDocumentsChange}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-mint-green file:text-white file:rounded-md file:cursor-pointer"
+                                    />
+                                    {uploadedDocuments?.length > 0 && (
+                                        <ul className="list-disc list-inside text-sm mt-2">
+                                            {uploadedDocuments.map((file, idx) => (
+                                                <li key={idx}>{file.name}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                    {errors.documents && (
+                                        <p className="text-coral-red text-sm">{errors.documents}</p>
                                     )}
                                 </div>
                             </div>
+
 
                             {/* Terms and Guidelines */}
                             <Alert className="bg-mint-green/20 border-mint-green text-charcoal">
