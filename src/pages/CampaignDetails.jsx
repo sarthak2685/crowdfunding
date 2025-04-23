@@ -43,32 +43,34 @@ const CampaignDetails = () => {
 
     useEffect(() => {
         const fetchCampaign = async () => {
-          try {
-            setIsLoading(true);
-      
-            const response = await fetch(`http://localhost:5000/api/campaigns/${id}`);
-            const data = await response.json();
-      
-            if (!response.ok) {
-              throw new Error(data.message || 'Failed to fetch campaign');
+            try {
+                setIsLoading(true);
+
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/api/campaigns/${id}`
+                );
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to fetch campaign");
+                }
+
+                setCampaign(data.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Error fetching campaign:", error);
+                setIsLoading(false);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description:
+                        "Failed to load campaign details. Please try again.",
+                });
             }
-      
-            setCampaign(data.data); // assuming response format: { success: true, data: { ... } }
-            setIsLoading(false);
-          } catch (error) {
-            console.error('Error fetching campaign:', error);
-            setIsLoading(false);
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Failed to load campaign details. Please try again.',
-            });
-          }
         };
-      
+
         fetchCampaign();
-      }, [id]);
-      
+    }, [id]);
 
     const progress = campaign
         ? Math.min(
@@ -88,59 +90,60 @@ const CampaignDetails = () => {
 
     const handleDonationSubmit = async () => {
         try {
-          setIsDonating(true);
-          
-          // Simulate payment processing
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-        //   In a real app, you would call your payment API here
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/donations`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              campaignId: id,
-              amount: parseFloat(donationAmount)
-            })
-          });
-          
-          if (!response.ok) throw new Error('Payment failed');
-          
-          setPaymentSuccess(true);
-          
-          // Update campaign data after successful donation
-          setCampaign(prev => ({
-            ...prev,
-            raisedAmount: prev.raisedAmount + parseFloat(donationAmount),
-            backers: prev.backers + 1
-          }));
-          
-          // Reset after 3 seconds
-          setTimeout(() => {
-            setIsDonationDialogOpen(false);
-            setPaymentSuccess(false);
-            setIsDonating(false);
-            
-            toast({
-              title: 'Thank you for your donation!',
-              description: `You have successfully donated $${donationAmount} to this campaign.`,
-              duration: 5000,
-            });
-          }, 3000);
-          
+            setIsDonating(true);
+
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/donations`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                    body: JSON.stringify({
+                        campaignId: id,
+                        amount: parseFloat(donationAmount),
+                    }),
+                }
+            );
+
+            if (!response.ok) throw new Error("Payment failed");
+            setPaymentSuccess(true);
+
+            // Update campaign data after successful donation
+            setCampaign((prev) => ({
+                ...prev,
+                raisedAmount: prev.raisedAmount + parseFloat(donationAmount),
+                backers: prev.backers + 1,
+            }));
+
+            // Reset after 3 seconds
+            setTimeout(() => {
+                setIsDonationDialogOpen(false);
+                setPaymentSuccess(false);
+                setIsDonating(false);
+
+                toast({
+                    title: "Thank you for your donation!",
+                    description: `You have successfully donated $${donationAmount} to this campaign.`,
+                    duration: 5000,
+                });
+            }, 3000);
         } catch (error) {
-          console.error('Donation error:', error);
-          setIsDonating(false);
-          toast({
-            variant: 'destructive',
-            title: 'Donation failed',
-            description: error.message || 'There was an error processing your donation. Please try again.',
-            duration: 5000,
-          });
+            console.error("Donation error:", error);
+            setIsDonating(false);
+            toast({
+                variant: "destructive",
+                title: "Donation failed",
+                description:
+                    error.message ||
+                    "There was an error processing your donation. Please try again.",
+                duration: 5000,
+            });
         }
-      };
+    };
 
     const handleShareClick = () => {
         if (navigator.share) {
@@ -159,13 +162,12 @@ const CampaignDetails = () => {
                 duration: 3000,
                 className: "bg-zinc-800 text-white border-none shadow-xl",
                 style: {
-                  position: "fixed",
-                  top: "1rem",
-                  right: "1rem",
-                  zIndex: 9999,
+                    position: "fixed",
+                    top: "1rem",
+                    right: "1rem",
+                    zIndex: 9999,
                 },
-              });
-              
+            });
         }
     };
 
@@ -218,7 +220,9 @@ const CampaignDetails = () => {
                     {/* Main Content */}
                     <div className="lg:col-span-2">
                         <img
-                            src={campaign.imageUrl || "/placeholder.svg"}
+                            src={`${import.meta.env.VITE_IMG_URL}${
+                                campaign.imageUrl
+                            }`}
                             alt={campaign.title}
                             className="w-full h-80 object-cover rounded-lg mb-6"
                         />
@@ -233,7 +237,13 @@ const CampaignDetails = () => {
 
                         <div className="flex items-center mb-8">
                             <img
-                                src={campaign.creator.profilePic}
+                                src={
+                                    campaign.creator.profilePic
+                                        ? `${import.meta.env.VITE_IMG_URL}${
+                                              campaign.creator.profilePic
+                                          }`
+                                        : "/default-profile.png"
+                                }
                                 alt={campaign.creator.name}
                                 className="w-10 h-10 rounded-full mr-3 object-cover"
                             />
@@ -314,7 +324,17 @@ const CampaignDetails = () => {
                                     >
                                         <div className="flex items-start gap-4">
                                             <img
-                                                src={comment.user.profilePic}
+                                                src={
+                                                    comment.user.profilePic
+                                                        ? `${
+                                                              import.meta.env
+                                                                  .VITE_IMG_URL
+                                                          }${
+                                                              comment.user
+                                                                  .profilePic
+                                                          }`
+                                                        : "/default-profile.png"
+                                                }
                                                 alt={comment.user.name}
                                                 className="w-10 h-10 rounded-full object-cover"
                                             />

@@ -1,53 +1,75 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AtSign, Lock, AlertTriangle } from "lucide-react";
+import { AtSign, Lock, Eye, EyeOff } from "lucide-react"; // Import Eye and EyeOff icons
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+// Reusable Input Component
+const LabeledInput = ({
+    icon: Icon,
+    label,
+    id,
+    value,
+    onChange,
+    type,
+    ...props
+}) => (
+    <div className="space-y-2">
+        <Label htmlFor={id} className="text-charcoal">
+            {label}
+        </Label>
+        <div className="relative">
+            <Icon className="absolute left-3 top-3 h-4 w-4 text-forest-green" />
+            <Input
+                id={id}
+                type={type} // Dynamically set the type (password or text)
+                className="pl-10 border-mint-green focus:border-deep-emerald focus:ring-2 focus:ring-forest-green/30"
+                value={value}
+                onChange={onChange}
+                {...props}
+            />
+        </div>
+    </div>
+);
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [passwordVisible, setPasswordVisible] = useState(false); // Manage password visibility
 
     const { login } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
 
-    // Where to redirect after login
     const from = location.state?.from || "/dashboard";
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!email || !password) {
-            setError("Please enter both email and password");
+            toast.error("Please enter both email and password");
             return;
         }
 
         try {
-            setError("");
             setIsLoading(true);
             const result = await login(email, password);
 
             if (!result.success) {
-                setError(result.message || "Login failed. Try again.");
+                toast.error(result.message || "Login failed. Try again.");
+            } else {
+                toast.success("Login successful!");
+                navigate(from);
             }
         } catch (err) {
-            setError("An unexpected error occurred.");
             console.error(err);
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsLoading(false);
         }
@@ -73,126 +95,106 @@ const Login = () => {
                 </div>
 
                 <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                    <Card className="border-mint-green">
-                        <CardHeader>
-                            <CardTitle className="text-forest-green">
+                    <div className="border-mint-green shadow-lg rounded-2xl p-8 bg-warm-beige">
+                        <div className="text-center">
+                            <h3 className="text-forest-green text-2xl font-bold">
                                 Login
-                            </CardTitle>
-                            <CardDescription className="text-charcoal">
+                            </h3>
+                            <p className="text-charcoal text-sm">
                                 Enter your credentials to access your account
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {error && (
-                                <Alert
-                                    variant="destructive"
-                                    className="mb-6 bg-coral-red/10 border-coral-red"
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <LabeledInput
+                                icon={AtSign}
+                                label="Email"
+                                id="email"
+                                type="email"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
+                                required
+                            />
+
+                            <div className="space-y-2">
+                                <Label
+                                    htmlFor="password"
+                                    className="text-charcoal"
                                 >
-                                    <AlertTriangle className="h-4 w-4 text-coral-red" />
-                                    <AlertDescription className="text-coral-red">
-                                        {error}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label
-                                        htmlFor="email"
-                                        className="text-charcoal"
-                                    >
-                                        Email
-                                    </Label>
-                                    <div className="relative">
-                                        <AtSign className="absolute left-3 top-3 h-4 w-4 text-forest-green" />
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            placeholder="you@example.com"
-                                            className="pl-10 border-mint-green focus:border-deep-emerald"
-                                            value={email}
-                                            onChange={(e) =>
-                                                setEmail(e.target.value)
-                                            }
-                                            autoComplete="email"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label
-                                            htmlFor="password"
-                                            className="text-charcoal"
-                                        >
-                                            Password
-                                        </Label>
-                                        <Link
-                                            to="/forgot-password"
-                                            className="text-sm font-medium text-forest-green hover:text-lime-green"
-                                        >
-                                            Forgot password?
-                                        </Link>
-                                    </div>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-forest-green" />
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            placeholder="••••••••"
-                                            className="pl-10 border-mint-green focus:border-deep-emerald"
-                                            value={password}
-                                            onChange={(e) =>
-                                                setPassword(e.target.value)
-                                            }
-                                            autoComplete="current-password"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    className="w-full bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? "Signing in..." : "Sign In"}
-                                </Button>
-                            </form>
-
-                            <div className="mt-6">
+                                    Password
+                                </Label>
                                 <div className="relative">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-mint-green" />
-                                    </div>
-                                    <div className="relative flex justify-center text-sm">
-                                        <span className="px-2 bg-soft-white text-charcoal">
-                                            Demo Credentials
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 border border-mint-green rounded-md p-2 text-xs text-charcoal bg-mint-green/10">
-                                    <p>
-                                        <strong>Admin:</strong>{" "}
-                                        admin@example.com
-                                    </p>
-                                    <p>
-                                        <strong>Password:</strong> admin123
-                                    </p>
-                                    <p className="mt-1">
-                                        <strong>Regular User:</strong>{" "}
-                                        user@example.com
-                                    </p>
-                                    <p>
-                                        <strong>Password:</strong> user123
-                                    </p>
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-forest-green" />
+                                    <Input
+                                        id="password"
+                                        type={
+                                            passwordVisible
+                                                ? "text"
+                                                : "password"
+                                        } // Toggle password visibility
+                                        placeholder="••••••••"
+                                        className="pl-10 border-mint-green focus:border-deep-emerald focus:ring-2 focus:ring-forest-green/30"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                        autoComplete="current-password"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-3 text-forest-green"
+                                        onClick={() =>
+                                            setPasswordVisible(!passwordVisible)
+                                        } // Toggle password visibility
+                                    >
+                                        {passwordVisible ? <EyeOff /> : <Eye />}
+                                    </button>
                                 </div>
                             </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-center">
-                            <p className="text-sm text-charcoal">
+
+                            <Button
+                                type="submit"
+                                className="w-full bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? "Signing in..." : "Sign In"}
+                            </Button>
+                        </form>
+
+                        <div className="mt-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-mint-green" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-soft-white text-charcoal">
+                                        Demo Credentials
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 border border-mint-green rounded-md p-2 text-xs text-charcoal bg-mint-green/10">
+                                <p>
+                                    <strong>Admin:</strong> admin@example.com
+                                </p>
+                                <p>
+                                    <strong>Password:</strong> admin123
+                                </p>
+                                <p className="mt-1">
+                                    <strong>Regular User:</strong>{" "}
+                                    user@example.com
+                                </p>
+                                <p>
+                                    <strong>Password:</strong> user123
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="text-center mt-6 text-sm">
+                            <p className="text-charcoal">
                                 Don&apos;t have an account?{" "}
                                 <Link
                                     to="/register"
@@ -201,8 +203,8 @@ const Login = () => {
                                     Sign up
                                 </Link>
                             </p>
-                        </CardFooter>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
             <Footer />
