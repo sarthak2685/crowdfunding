@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Bell, User } from "lucide-react";
+import { Menu, X, Bell, User, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
     const { currentUser, logout, isAdmin } = useAuth();
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -22,6 +23,7 @@ const Header = () => {
     const handleLogout = () => {
         logout();
         navigate("/");
+        setProfileMenuOpen(false);
     };
 
     const getDashboardLink = () => {
@@ -100,34 +102,57 @@ const Header = () => {
                                     <Bell size={20} />
                                 </Link>
 
-                                <Link to={getDashboardLink()}>
-                                    <Button
-                                        className={`px-4 py-2 rounded-full transition ${
+                                {/* Profile Dropdown */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() =>
+                                            setProfileMenuOpen(!profileMenuOpen)
+                                        }
+                                        className={`flex items-center space-x-2 px-3 py-2 rounded-full transition ${
                                             scrolled
-                                                ? "bg-forest-green text-white hover:bg-lime-green"
-                                                : "bg-mint-green text-forest-green hover:bg-lime-green hover:text-white"
+                                                ? "text-charcoal hover:bg-mint-green/20"
+                                                : "text-soft-white hover:bg-mint-green/20"
                                         }`}
                                     >
-                                        Dashboard
-                                    </Button>
-                                </Link>
+                                        <Avatar className="h-8 w-8 border-2 border-mint-green">
+                                            <AvatarImage
+                                                src={currentUser.avatar}
+                                                alt="User Avatar"
+                                            />
+                                            <AvatarFallback className="text-white bg-deep-emerald">
+                                                {getInitials()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <ChevronDown
+                                            size={16}
+                                            className={`transition-transform ${
+                                                profileMenuOpen
+                                                    ? "rotate-180"
+                                                    : ""
+                                            }`}
+                                        />
+                                    </button>
 
-                                <Avatar className="border-2 border-mint-green">
-                                    <AvatarImage
-                                        src={currentUser.avatar}
-                                        alt="User Avatar"
-                                    />
-                                    <AvatarFallback className="text-white bg-deep-emerald">
-                                        {getInitials()}
-                                    </AvatarFallback>
-                                </Avatar>
-
-                                <Button
-                                    className="px-4 py-2 rounded-full border-coral-red bg-coral-red text-white hover:bg-red-600"
-                                    onClick={handleLogout}
-                                >
-                                    Logout
-                                </Button>
+                                    {profileMenuOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100">
+                                            <Link
+                                                to={getDashboardLink()}
+                                                className="block px-4 py-2 text-sm text-charcoal hover:bg-mint-green/20"
+                                                onClick={() =>
+                                                    setProfileMenuOpen(false)
+                                                }
+                                            >
+                                                Dashboard
+                                            </Link>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="block w-full text-left px-4 py-2 text-sm text-coral-red hover:bg-coral-red/10"
+                                            >
+                                                Logout
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         ) : (
                             <>
@@ -161,7 +186,7 @@ const Header = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="fixed inset-0 z-50 bg-soft-white pt-20 px-6">
+                <div className="fixed inset-0 z-40 bg-soft-white pt-20 px-6">
                     <nav className="flex flex-col space-y-4">
                         {["Home", "Campaigns", "How It Works"].map(
                             (label, i) => (

@@ -5,11 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AtSign, Lock, Eye, EyeOff } from "lucide-react"; // Import Eye and EyeOff icons
+import { AtSign, Lock, Eye, EyeOff } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-// Reusable Input Component
 const LabeledInput = ({
     icon: Icon,
     label,
@@ -27,7 +26,7 @@ const LabeledInput = ({
             <Icon className="absolute left-3 top-3 h-4 w-4 text-forest-green" />
             <Input
                 id={id}
-                type={type} // Dynamically set the type (password or text)
+                type={type}
                 className="pl-10 border-mint-green focus:border-deep-emerald focus:ring-2 focus:ring-forest-green/30"
                 value={value}
                 onChange={onChange}
@@ -41,7 +40,7 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [passwordVisible, setPasswordVisible] = useState(false); // Manage password visibility
+    const [passwordVisible, setPasswordVisible] = useState(false);
 
     const { login } = useAuth();
     const location = useLocation();
@@ -79,8 +78,8 @@ const Login = () => {
         <>
             <Header />
             <div className="min-h-screen bg-soft-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-charcoal">
+                <div className="sm:mx-auto sm:w-full sm:max-w-md mt-16">
+                    <h2 className="text-center text-3xl font-extrabold text-charcoal">
                         Sign in to your account
                     </h2>
                     <p className="mt-2 text-center text-sm text-charcoal">
@@ -94,7 +93,7 @@ const Login = () => {
                     </p>
                 </div>
 
-                <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="mt-12 sm:mx-auto sm:w-full sm:max-w-md">
                     <div className="border-mint-green shadow-lg rounded-2xl p-8 bg-warm-beige">
                         <div className="text-center">
                             <h3 className="text-forest-green text-2xl font-bold">
@@ -105,7 +104,7 @@ const Login = () => {
                             </p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
                             <LabeledInput
                                 icon={AtSign}
                                 label="Email"
@@ -119,36 +118,25 @@ const Login = () => {
                             />
 
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="password"
-                                    className="text-charcoal"
-                                >
+                                <Label htmlFor="password" className="text-charcoal">
                                     Password
                                 </Label>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-3 h-4 w-4 text-forest-green" />
                                     <Input
                                         id="password"
-                                        type={
-                                            passwordVisible
-                                                ? "text"
-                                                : "password"
-                                        } // Toggle password visibility
+                                        type={passwordVisible ? "text" : "password"}
                                         placeholder="••••••••"
                                         className="pl-10 border-mint-green focus:border-deep-emerald focus:ring-2 focus:ring-forest-green/30"
                                         value={password}
-                                        onChange={(e) =>
-                                            setPassword(e.target.value)
-                                        }
+                                        onChange={(e) => setPassword(e.target.value)}
                                         autoComplete="current-password"
                                         required
                                     />
                                     <button
                                         type="button"
                                         className="absolute right-3 top-3 text-forest-green"
-                                        onClick={() =>
-                                            setPasswordVisible(!passwordVisible)
-                                        } // Toggle password visibility
+                                        onClick={() => setPasswordVisible(!passwordVisible)}
                                     >
                                         {passwordVisible ? <EyeOff /> : <Eye />}
                                     </button>
@@ -184,8 +172,7 @@ const Login = () => {
                                     <strong>Password:</strong> admin123
                                 </p>
                                 <p className="mt-1">
-                                    <strong>Regular User:</strong>{" "}
-                                    user@example.com
+                                    <strong>Regular User:</strong> user@example.com
                                 </p>
                                 <p>
                                     <strong>Password:</strong> user123
