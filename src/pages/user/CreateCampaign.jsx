@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
     Select,
     SelectContent,
@@ -203,60 +205,62 @@ const CreateCampaign = () => {
             const result = await response.json();
 
             if (result.success) {
-                toast({
-                    title: "🎉 Campaign Created!",
-                    description:
-                        "Your campaign has been created and is pending approval.",
-                    variant: "success",
-                    duration: 4000,
-                    className: "bg-green-600 text-white border-none shadow-xl",
+                toast.success("🎉 Campaign Created! Your campaign has been created and is pending approval.", {
+                    position: "top-right",
+                    autoClose: 4000,
+                    hideProgressBar: true,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
                     style: {
-                        position: "fixed",
-                        top: "1rem",
-                        right: "1rem",
-                        width: "30%",
-                        maxWidth: "400px",
-                        zIndex: 9999,
+                      backgroundColor: "#16a34a", // Tailwind's green-600
+                      color: "white",
+                      boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
+                      border: "none",
+                      width: "30%",
+                      maxWidth: "400px",
+                      zIndex: 9999,
                     },
-                });
+                  });
                 navigate("/dashboard");
             } else {
-                toast({
-                    title: "❌ Failed to Create Campaign",
-                    description:
-                        result.message ||
-                        "Something went wrong. Please try again.",
-                    variant: "warning",
-                    duration: 5000,
-                    className: "bg-amber-600 text-white border-none shadow-xl",
+                toast.error(`❌ ${result.message || "Something went wrong. Please try again."}`, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: true,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
                     style: {
-                        position: "fixed",
-                        top: "1rem",
-                        right: "1rem",
-                        width: "30%",
-                        maxWidth: "400px",
-                        zIndex: 9999,
+                      backgroundColor: "#d97706", // amber-600
+                      color: "white",
+                      boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
+                      border: "none",
+                      width: "30%",
+                      maxWidth: "400px",
+                      zIndex: 9999,
                     },
-                });
+                  });
             }
         } catch (error) {
             console.error("Error creating campaign:", error);
-            toast({
-                title: "⚠️ Upload or Server Error",
-                description:
-                    error.message ||
-                    "There was a problem uploading your media.",
-                variant: "destructive",
-                duration: 5000,
-                className: "bg-red-600 text-white border-none shadow-xl",
-                style: {
-                    position: "fixed",
-                    top: "1rem",
-                    right: "1rem",
-                    width: "30%",
-                    maxWidth: "400px",
-                    zIndex: 9999,
-                },
+
+            toast.error(`⚠️ Upload or Server Error: ${error.message || "There was a problem uploading your media."}`, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              style: {
+                backgroundColor: "#dc2626", // Tailwind's red-600
+                color: "white",
+                boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
+                border: "none",
+                width: "30%",
+                maxWidth: "400px",
+                zIndex: 9999,
+              },
             });
         } finally {
             setIsSubmitting(false);

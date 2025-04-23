@@ -64,17 +64,32 @@ const AdminDashboard = () => {
         }
   
         const data = await response.json();
-        console.log(data.data)
-  
-        // Assuming your backend sends:
-        // {
-        //   stats: {...},
-        //   recentCampaigns: [...],
-        //   fundraisingData: [...]
-        // }
-        setStats(data.data);
-        setRecentCampaigns(data.data.recentCampaigns);
-        setFundraisingData(data.fundraisingData);
+        console.log("API Response:", data); // Keep this for debugging
+        
+        // Updated data handling based on API response structure
+        if (data.data) {
+          // If data comes in a nested 'data' property
+          setStats({
+            totalCampaigns: data.data.totalCampaigns || 0,
+            pendingApprovals: data.data.pendingApprovals || 0,
+            totalUsers: data.data.totalUsers || 0,
+            totalDonations: data.data.totalDonations || 0,
+          });
+          
+          setRecentCampaigns(data.data.recentCampaigns || []);
+          setFundraisingData(data.data.fundraisingData || []);
+        } else {
+          // If data is at the root level
+          setStats({
+            totalCampaigns: data.totalCampaigns || 0,
+            pendingApprovals: data.pendingApprovals || 0,
+            totalUsers: data.totalUsers || 0,
+            totalDonations: data.totalDonations || 0,
+          });
+          
+          setRecentCampaigns(data.recentCampaigns || []);
+          setFundraisingData(data.fundraisingData || []);
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         toast({
@@ -90,6 +105,7 @@ const AdminDashboard = () => {
   
     fetchDashboardData();
   }, []);
+  
   
 
   const getStatusBadge = (status) => {
@@ -242,7 +258,7 @@ const AdminDashboard = () => {
             <CardContent className="p-2 sm:p-4">
               {isLoading ? (
                 <div className="h-60 sm:h-80 bg-[#FAF3DD] animate-pulse rounded-md"></div>
-              ) : (
+              ) : fundraisingData.length > 0 ? (
                 <div className="h-60 sm:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -310,6 +326,10 @@ const AdminDashboard = () => {
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
+              ) : (
+                <div className="h-60 sm:h-80 flex items-center justify-center text-[#1B1B1E]/80">
+                  No fundraising data available
+                </div>
               )}
             </CardContent>
           </Card>
@@ -341,38 +361,37 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <div>
-  {Array.isArray(recentCampaigns) &&
-  recentCampaigns.filter((campaign) => campaign.status === "pending").length > 0 ? (
-    <div className="space-y-2 sm:space-y-3">
-      {recentCampaigns
-        .filter((campaign) => campaign.status === "pending")
-        .map((campaign) => (
-          <div
-            key={campaign._id}
-            className="flex items-center justify-between border-b border-[#95D5B2]/30 pb-2 sm:pb-3 last:border-0 last:pb-0"
-          >
-            <div className="max-w-[70%]">
-              <p className="text-sm sm:text-base font-medium text-[#1B1B1E] truncate">
-                {campaign.title}
-              </p>
-              <p className="text-xs text-[#1B1B1E]/80 truncate">
-                by {campaign.creator} •{" "}
-                {format(new Date(campaign.createdAt), "MMM d, yyyy")}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-[#EF476F] text-[#EF476F] hover:bg-[#EF476F]/10 h-8"
-            >
-              <Eye size={14} className="mr-1" />
-              <span className="hidden xs:inline">View</span>
-            </Button>
-          </div>
-        ))}
-    </div>
-  
-
+                  {recentCampaigns && recentCampaigns.filter((campaign) => campaign.status === "pending").length > 0 ? (
+                    <div className="space-y-2 sm:space-y-3">
+                      {recentCampaigns
+                        .filter((campaign) => campaign.status === "pending")
+                        .map((campaign) => (
+                          <div
+                            key={campaign._id}
+                            className="flex items-center justify-between border-b border-[#95D5B2]/30 pb-2 sm:pb-3 last:border-0 last:pb-0"
+                          >
+                            <div className="max-w-[70%]">
+                              <p className="text-sm sm:text-base font-medium text-[#1B1B1E] truncate">
+                                {campaign.title}
+                              </p>
+                              <p className="text-xs text-[#1B1B1E]/80 truncate">
+                                by {campaign.creator?.name || campaign.creator || "Unknown"} •{" "}
+                                {format(new Date(campaign.createdAt), "MMM d, yyyy")}
+                              </p>
+                            </div>
+                            <Link to={`/admin/campaigns/${campaign._id}`}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-[#EF476F] text-[#EF476F] hover:bg-[#EF476F]/10 h-8"
+                              >
+                                <Eye size={14} className="mr-1" />
+                                <span className="hidden xs:inline">View</span>
+                              </Button>
+                            </Link>
+                          </div>
+                        ))}
+                    </div>
                   ) : (
                     <div className="text-center py-6 sm:py-10">
                       <p className="text-sm sm:text-base text-[#1B1B1E]/80 mb-3 sm:mb-4">
@@ -464,64 +483,72 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                      {Array.isArray(recentCampaigns) &&
-  recentCampaigns.map((campaign) => (                          <TableRow
-                            key={campaign._id}
-                            className="hover:bg-[#95D5B2]/10"
-                          >
-                            <TableCell className="font-medium text-[#1B1B1E] text-xs sm:text-sm max-w-[150px] truncate">
-                              {campaign.title}
-                            </TableCell>
-                            <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden sm:table-cell">
-                              {campaign.creator}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {getStatusBadge(campaign.status)}
-                            </TableCell>
-                            <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden xs:table-cell">
-                              {format(
-                                new Date(campaign.createdAt),
-                                "MMM d, yyyy"
-                              )}
-                            </TableCell>
-                            <TableCell className="text-left">
-                              <div className="w-full bg-[#FAF3DD] rounded-full h-2 sm:h-2.5">
-                                <div
-                                  className="bg-[#40916C] h-2 sm:h-2.5 rounded-full"
-                                  style={{
-                                    width: `${Math.min(
-                                      100,
-                                      Math.round(
-                                        (campaign.raisedAmount /
-                                          campaign.goalAmount) *
-                                          100
-                                      )
-                                    )}%`,
-                                  }}
-                                ></div>
-                              </div>
-                              <span className="text-[#1B1B1E] text-xs sm:text-sm">
-                                {Math.round(
-                                  (campaign.raisedAmount / campaign.goalAmount) *
-                                    100
+                        {recentCampaigns && recentCampaigns.length > 0 ? (
+                          recentCampaigns.map((campaign) => (
+                            <TableRow
+                              key={campaign._id}
+                              className="hover:bg-[#95D5B2]/10"
+                            >
+                              <TableCell className="font-medium text-[#1B1B1E] text-xs sm:text-sm max-w-[150px] truncate">
+                                {campaign.title}
+                              </TableCell>
+                              <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden sm:table-cell">
+                                {campaign.creator?.name || campaign.creator || "Unknown"}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {getStatusBadge(campaign.status)}
+                              </TableCell>
+                              <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden xs:table-cell">
+                                {format(
+                                  new Date(campaign.createdAt),
+                                  "MMM d, yyyy"
                                 )}
-                                %
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-left">
-                              <Link to={`/campaign/${campaign._id}`}>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-[#52B788] hover:bg-[#52B788]/10 h-8"
-                                >
-                                  <Eye size={14} className="mr-1" />
-                                  <span className="hidden sm:inline">View</span>
-                                </Button>
-                              </Link>
+                              </TableCell>
+                              <TableCell className="text-left">
+                                <div className="w-full bg-[#FAF3DD] rounded-full h-2 sm:h-2.5">
+                                  <div
+                                    className="bg-[#40916C] h-2 sm:h-2.5 rounded-full"
+                                    style={{
+                                      width: `${Math.min(
+                                        100,
+                                        Math.round(
+                                          (campaign.raisedAmount /
+                                            campaign.goalAmount) *
+                                            100
+                                        )
+                                      )}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                                <span className="text-[#1B1B1E] text-xs sm:text-sm">
+                                  {Math.round(
+                                    (campaign.raisedAmount / campaign.goalAmount) *
+                                      100
+                                  )}
+                                  %
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-left">
+                                <Link to={`/campaign/${campaign._id}`}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-[#52B788] hover:bg-[#52B788]/10 h-8"
+                                  >
+                                    <Eye size={14} className="mr-1" />
+                                    <span className="hidden sm:inline">View</span>
+                                  </Button>
+                                </Link>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6 text-[#1B1B1E]/80">
+                              No campaigns found
                             </TableCell>
                           </TableRow>
-                        ))}
+                        )}
                       </TableBody>
                     </Table>
                   </div>
@@ -565,68 +592,75 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                      {Array.isArray(recentCampaigns) &&
-  recentCampaigns
-    .filter((campaign) => campaign.status === "active")
-    .map((campaign) => (
-                            <TableRow
-                              key={campaign._id}
-                              className="hover:bg-[#95D5B2]/10"
-                            >
-                              <TableCell className="font-medium text-[#1B1B1E] text-xs sm:text-sm max-w-[150px] truncate">
-                                {campaign.title}
-                              </TableCell>
-                              <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden sm:table-cell">
-                                {campaign.creator}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(campaign.status)}
-                              </TableCell>
-                              <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden xs:table-cell">
-                                {format(
-                                  new Date(campaign.createdAt),
-                                  "MMM d, yyyy"
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="w-full bg-[#FAF3DD] rounded-full h-2 sm:h-2.5">
-                                  <div
-                                    className="bg-[#40916C] h-2 sm:h-2.5 rounded-full"
-                                    style={{
-                                      width: `${Math.min(
-                                        100,
-                                        Math.round(
-                                          (campaign.raisedAmount /
-                                            campaign.goalAmount) *
-                                            100
-                                        )
-                                      )}%`,
-                                    }}
-                                  ></div>
-                                </div>
-                                <span className="text-[#1B1B1E] text-xs sm:text-sm">
-                                  {Math.round(
-                                    (campaign.raisedAmount /
-                                      campaign.goalAmount) *
-                                      100
+                        {recentCampaigns && recentCampaigns.filter(c => c.status === "active").length > 0 ? (
+                          recentCampaigns
+                            .filter((campaign) => campaign.status === "active")
+                            .map((campaign) => (
+                              <TableRow
+                                key={campaign._id}
+                                className="hover:bg-[#95D5B2]/10"
+                              >
+                                <TableCell className="font-medium text-[#1B1B1E] text-xs sm:text-sm max-w-[150px] truncate">
+                                  {campaign.title}
+                                </TableCell>
+                                <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden sm:table-cell">
+                                  {campaign.creator?.name || campaign.creator || "Unknown"}
+                                </TableCell>
+                                <TableCell>
+                                  {getStatusBadge(campaign.status)}
+                                </TableCell>
+                                <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden xs:table-cell">
+                                  {format(
+                                    new Date(campaign.createdAt),
+                                    "MMM d, yyyy"
                                   )}
-                                  %
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Link to={`/campaign/${campaign._id}`}>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-[#52B788] hover:bg-[#52B788]/10 h-8"
-                                  >
-                                    <Eye size={14} className="mr-1" />
-                                    <span className="hidden sm:inline">View</span>
-                                  </Button>
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="w-full bg-[#FAF3DD] rounded-full h-2 sm:h-2.5">
+                                    <div
+                                      className="bg-[#40916C] h-2 sm:h-2.5 rounded-full"
+                                      style={{
+                                        width: `${Math.min(
+                                          100,
+                                          Math.round(
+                                            (campaign.raisedAmount /
+                                              campaign.goalAmount) *
+                                              100
+                                          )
+                                        )}%`,
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-[#1B1B1E] text-xs sm:text-sm">
+                                    {Math.round(
+                                      (campaign.raisedAmount /
+                                        campaign.goalAmount) *
+                                        100
+                                    )}
+                                    %
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Link to={`/campaign/${campaign._id}`}>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-[#52B788] hover:bg-[#52B788]/10 h-8"
+                                    >
+                                      <Eye size={14} className="mr-1" />
+                                      <span className="hidden sm:inline">View</span>
+                                    </Button>
+                                  </Link>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6 text-[#1B1B1E]/80">
+                              No active campaigns found
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </div>
@@ -670,45 +704,52 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                      {Array.isArray(recentCampaigns) &&
-  recentCampaigns
-    .filter((campaign) => campaign.status === "pending")
-    .map((campaign) => (
-                            <TableRow
-                              key={campaign._id}
-                              className="hover:bg-[#95D5B2]/10"
-                            >
-                              <TableCell className="font-medium text-[#1B1B1E] text-xs sm:text-sm max-w-[150px] truncate">
-                                {campaign.title}
-                              </TableCell>
-                              <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden sm:table-cell">
-                                {campaign.creator}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(campaign.status)}
-                              </TableCell>
-                              <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden xs:table-cell">
-                                {format(
-                                  new Date(campaign.createdAt),
-                                  "MMM d, yyyy"
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right text-[#1B1B1E] text-xs sm:text-sm">
-                                Rs.{campaign.goalAmount.toLocaleString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Link to={`/admin/approvals`}>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-[#EF476F] text-[#EF476F] hover:bg-[#EF476F]/10 h-8"
-                                  >
-                                    <span className="text-xs sm:text-sm">Review</span>
-                                  </Button>
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                        {recentCampaigns && recentCampaigns.filter(c => c.status === "pending").length > 0 ? (
+                          recentCampaigns
+                            .filter((campaign) => campaign.status === "pending")
+                            .map((campaign) => (
+                              <TableRow
+                                key={campaign._id}
+                                className="hover:bg-[#95D5B2]/10"
+                              >
+                                <TableCell className="font-medium text-[#1B1B1E] text-xs sm:text-sm max-w-[150px] truncate">
+                                  {campaign.title}
+                                </TableCell>
+                                <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden sm:table-cell">
+                                  {campaign.creator?.name || campaign.creator || "Unknown"}
+                                </TableCell>
+                                <TableCell>
+                                  {getStatusBadge(campaign.status)}
+                                </TableCell>
+                                <TableCell className="text-[#1B1B1E] text-xs sm:text-sm hidden xs:table-cell">
+                                  {format(
+                                    new Date(campaign.createdAt),
+                                    "MMM d, yyyy"
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right text-[#1B1B1E] text-xs sm:text-sm">
+                                  Rs.{campaign.goalAmount?.toLocaleString() || "0"}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Link to={`/admin/approvals/${campaign._id}`}>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-[#EF476F] text-[#EF476F] hover:bg-[#EF476F]/10 h-8"
+                                    >
+                                      <span className="text-xs sm:text-sm">Review</span>
+                                    </Button>
+                                  </Link>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-6 text-[#1B1B1E]/80">
+                              No pending campaigns found
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </div>
