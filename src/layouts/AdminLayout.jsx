@@ -113,9 +113,7 @@ const AdminLayout = () => {
                         <div className="flex items-center space-x-2">
                             <span className="font-bold text-xl text-forest-green">
                                 Fund
-                                <span className="text-mint-green">
-                                    Sure
-                                </span>
+                                <span className="text-mint-green">Sure</span>
                             </span>
                         </div>
                     </div>
@@ -150,23 +148,10 @@ const AdminLayout = () => {
                             </Link>
                         ))}
                     </div>
-                    <div className="p-4 border-t">
-                        <div className="flex items-center space-x-3 mb-4">
-                            <div className="h-10 w-10 rounded-full bg-forest-green/10 flex items-center justify-center text-forest-green">
-                                <User size={20} />
-                            </div>
-                            <div>
-                                <p className="font-medium">
-                                    {currentUser?.name}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                    {currentUser?.email}
-                                </p>
-                            </div>
-                        </div>
+                    <div className="p-4 flex border-t fixed">
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center space-x-3 px-3 py-2 rounded-md text-coral-red hover:bg-coral-red/10"
+                            className="w-full flex items-center space-x-3 px-4 py-2 rounded-md text-coral-red hover:bg-coral-red/10"
                         >
                             <LogOut size={18} />
                             <span>Logout</span>

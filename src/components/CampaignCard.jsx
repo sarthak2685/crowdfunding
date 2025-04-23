@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-    CalendarClock,
-    Target,
-    Users,
-    DollarSign,
-    IndianRupee,
-} from "lucide-react";
+import { CalendarClock, Target, Users, IndianRupee, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +15,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 const CampaignCard = ({ campaign }) => {
     const {
@@ -54,9 +50,19 @@ const CampaignCard = ({ campaign }) => {
         addSuffix: true,
     });
 
+    const firstImage =
+        Array.isArray(imageUrl) && imageUrl.length > 0 ? imageUrl[0] : null;
+
+    const fullImageUrl = firstImage
+        ? firstImage.startsWith("http")
+            ? firstImage
+            : `${
+                  import.meta.env.VITE_IMG_URL || "http://localhost:5000"
+              }${firstImage}`
+        : "/placeholder.svg";
+
     const handleDonateClick = () => {
         if (!currentUser) {
-            // Redirect to login if not logged in
             toast({
                 title: "Login Required",
                 description: "Please login to donate to this campaign.",
@@ -81,102 +87,44 @@ const CampaignCard = ({ campaign }) => {
         setIsLoading(true);
         try {
             const apiUrl =
-                import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-            const response = await fetch(
-                `${apiUrl}/donations/create-payment-intent`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem(
-                            "token"
-                        )}`,
-                    },
-                    body: JSON.stringify({
-                        campaignId: _id,
-                        amount: donationAmount,
-                    }),
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Failed to create payment intent");
-            }
+                import.meta.env.VITE_API_URL || "http://localhost:5000";
+            const response = await fetch(`${apiUrl}/donations`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({
+                    campaignId: _id,
+                    amount: donationAmount,
+                }),
+            });
 
             const data = await response.json();
 
-            if (data.success) {
-                toast({
-                    title: "Processing Donation",
-                    description:
-                        "Your donation is being processed. You will be redirected to complete it.",
-                });
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to process donation");
+            }
 
-                // For now, we'll just close the dialog and show a success message
-                // In a real app, you would use the client secret to complete the payment using Stripe Elements
-                setShowDonateDialog(false);
+            toast({
+                title: "Donation Successful!",
+                description: `You have successfully donated ₹${donationAmount} to ${title}.`,
+            });
 
-                // Simple version without Stripe frontend integration
-                // Typically, you'd use the client secret with Stripe.js to complete the payment
-                const completePayment = await fetch(`${apiUrl}/donations`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem(
-                            "token"
-                        )}`,
-                    },
-                    body: JSON.stringify({
-                        campaignId: _id,
-                        amount: donationAmount,
-                    }),
-                });
+            // Close dialog and potentially refresh data
+            setShowDonateDialog(false);
 
-                if (!completePayment.ok) {
-                    throw new Error("Failed to process donation");
-                }
-
-                const paymentResult = await completePayment.json();
-
-                if (paymentResult.success) {
-                    toast({
-                        title: "Donation Successful!",
-                        description: `You have successfully donated $${donationAmount} to ${title}.`,
-                    });
-
-                    // Navigate to donation history or refresh to see the donation reflected
-                    setTimeout(() => {
-                        if (window.location.pathname.includes("/dashboard")) {
-                            window.location.reload();
-                        } else {
-                            navigate("/dashboard/donations");
-                        }
-                    }, 2000);
-                } else {
-                    toast({
-                        title: "Donation Failed",
-                        description:
-                            paymentResult.message ||
-                            "There was a problem processing your donation.",
-                        variant: "destructive",
-                    });
-                }
-            } else {
-                toast({
-                    title: "Donation Failed",
-                    description:
-                        data.message ||
-                        "There was a problem processing your donation.",
-                    variant: "destructive",
-                });
+            // In a real app, you might want to update the UI or trigger a data refresh
+            if (window.location.pathname.includes("/dashboard")) {
+                window.location.reload();
             }
         } catch (error) {
             console.error("Donation error:", error);
             toast({
-                title: "Error",
+                title: "Donation Failed",
                 description:
                     error.message ||
-                    "There was a problem connecting to the server.",
+                    "There was an error processing your donation.",
                 variant: "destructive",
             });
         } finally {
@@ -186,18 +134,20 @@ const CampaignCard = ({ campaign }) => {
 
     return (
         <>
-            <div className="campaign-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all">
-                <div className="relative h-48 overflow-hidden">
+            <div className="campaign-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div className="relative h-48 w-full overflow-hidden group">
                     <img
-                        src={imageUrl || "/placeholder.svg"}
+                        src={fullImageUrl}
                         alt={title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/placeholder.svg";
+                        }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     <div className="absolute top-0 left-0 m-3">
-                        <Badge
-                            variant="secondary"
-                            className="font-medium text-soft-white px-4 py-2 rounded-full"
-                        >
+                        <Badge className="font-medium bg-forest-green hover:bg-lime-green text-white px-3 py-1 rounded-full">
                             {category}
                         </Badge>
                     </div>
@@ -207,7 +157,7 @@ const CampaignCard = ({ campaign }) => {
                     <h3 className="font-bold text-lg mb-2 line-clamp-1">
                         <Link
                             to={`/campaign/${_id}`}
-                            className="hover:text-primary transition-colors"
+                            className="hover:text-forest-green transition-colors"
                         >
                             {title}
                         </Link>
@@ -219,44 +169,47 @@ const CampaignCard = ({ campaign }) => {
 
                     {/* Progress Bar */}
                     <div className="mt-4 mb-3">
-                        <div className="h-2 w-full bg-mint-green/20 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-forest-green rounded-full progress-bar"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-                        <div className="flex justify-between items-center mt-2 text-sm">
-                            <span className="font-semibold">
-                                Rs.{raisedAmount.toLocaleString()}
+                        <div className="flex justify-between items-center mb-1 text-sm">
+                            <span className="font-semibold text-forest-green">
+                                ₹{raisedAmount.toLocaleString()}
                             </span>
                             <span className="text-gray-500">
-                                {progress}% of Rs.{goalAmount.toLocaleString()}
+                                {progress}% of ₹{goalAmount.toLocaleString()}
                             </span>
                         </div>
+                        <Progress
+                            value={progress}
+                            className="h-2 bg-gray-100"
+                            indicatorClassName="bg-forest-green"
+                        />
                     </div>
 
                     {/* Donate Button */}
-                    <div className="mt-3 mb-3">
+                    <div className="mt-4 mb-3">
                         <Button
                             onClick={handleDonateClick}
-                            className="w-full bg-deep-emerald hover:bg-lime-green  px-4 py-2 rounded-full flex flex-wrap text-soft-white"
+                            className="w-full bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full flex items-center"
                         >
-                            <IndianRupee className="w-4 h-4 mr-2" /> Donate Now
+                            <Heart className="w-4 h-4 mr-2" />
+                            <span>Support</span>
                         </Button>
                     </div>
 
                     {/* Campaign Stats */}
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t text-sm text-gray-500">
-                        <div className="flex items-center text-forest-green space-x-1">
-                            <CalendarClock size={16} />
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                        <div className="flex items-center space-x-1">
+                            <CalendarClock
+                                size={14}
+                                className="text-forest-green"
+                            />
                             <span>{daysLeft} days left</span>
                         </div>
-                        <div className="flex items-center text-forest-green  space-x-1">
-                            <Users size={16} />
-                            <span>{backers} backers</span>
+                        <div className="flex items-center space-x-1">
+                            <Users size={14} className="text-forest-green" />
+                            <span>{backers} supporters</span>
                         </div>
-                        <div className="flex items-center text-forest-green space-x-1">
-                            <Target size={16} />
+                        <div className="flex items-center space-x-1">
+                            <Target size={14} className="text-forest-green" />
                             <span>{timeAgo}</span>
                         </div>
                     </div>
@@ -267,16 +220,18 @@ const CampaignCard = ({ campaign }) => {
             <Dialog open={showDonateDialog} onOpenChange={setShowDonateDialog}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Donate to {title}</DialogTitle>
+                        <DialogTitle className="text-forest-green">
+                            Support {title}
+                        </DialogTitle>
                         <DialogDescription>
-                            Enter the amount you would like to donate to support
-                            this campaign.
+                            Your contribution will help make this campaign
+                            successful.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="py-4">
+                    <div className="py-4 space-y-4">
                         <div className="flex items-center space-x-2">
-                            <DollarSign className="text-gray-500" />
+                            <IndianRupee className="text-gray-500" />
                             <Input
                                 type="number"
                                 value={donationAmount}
@@ -286,14 +241,32 @@ const CampaignCard = ({ campaign }) => {
                                 min="1"
                                 step="1"
                                 placeholder="Amount"
+                                className="text-lg font-medium"
                             />
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-2">
+                            {[50, 100, 200, 500].map((amount) => (
+                                <Button
+                                    key={amount}
+                                    variant="outline"
+                                    className={cn(
+                                        "rounded-full",
+                                        donationAmount === amount &&
+                                            "bg-forest-green text-white"
+                                    )}
+                                    onClick={() => setDonationAmount(amount)}
+                                >
+                                    ₹{amount}
+                                </Button>
+                            ))}
                         </div>
                     </div>
 
                     <DialogFooter>
                         <Button
-                            onClick={() => setShowDonateDialog(false)}
                             variant="outline"
+                            onClick={() => setShowDonateDialog(false)}
                             disabled={isLoading}
                         >
                             Cancel
@@ -301,8 +274,16 @@ const CampaignCard = ({ campaign }) => {
                         <Button
                             onClick={handleDonationSubmit}
                             disabled={isLoading}
+                            className="bg-forest-green hover:bg-lime-green"
                         >
-                            {isLoading ? "Processing..." : "Donate"}
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                "Donate Now"
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

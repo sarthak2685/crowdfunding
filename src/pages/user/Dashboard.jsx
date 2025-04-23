@@ -15,45 +15,61 @@ import {
 const Dashboard = () => {
     const { currentUser } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
-    const [userStats, setUserStats] = useState({
-        totalDonated: 0,
-        campaignsSupported: 0,
-        campaignsCreated: 0,
+    const [dashboardData, setDashboardData] = useState({
+        stats: {
+            totalDonations: 0,
+            totalCampaigns: 0,
+            activeCampaigns: 0,
+            pendingCampaigns: 0,
+            completedCampaigns: 0,
+            rejectedCampaigns: 0,
+            totalRaised: 0,
+        },
+        recentDonations: [],
+        campaigns: {
+            all: [],
+            active: [],
+            pending: [],
+            completed: [],
+            rejected: [],
+        },
     });
-    const [recentDonations, setRecentDonations] = useState([]);
-    const [userCampaigns, setUserCampaigns] = useState([]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-          try {
-            setIsLoading(true);
-      
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/dashboard`, {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
-            });
-      
-            const data = await response.json();
-      
-            if (response.ok && data) {
-              setUserStats(data.stats);
-              setRecentDonations(data.recentDonations);
-              setUserCampaigns(data.userCampaigns);
-            } else {
-              console.error("Failed to fetch dashboard data:", data?.message);
+            try {
+                setIsLoading(true);
+
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/users/dashboard`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    setDashboardData(data);
+                } else {
+                    console.error(
+                        "Failed to fetch dashboard data:",
+                        data?.message
+                    );
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setIsLoading(false);
             }
-      
-          } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-          } finally {
-            setIsLoading(false);
-          }
         };
-      
+
         fetchDashboardData();
-      }, []);
-      
+    }, []);
 
     return (
         <div className="bg-soft-white min-h-screen p-6">
@@ -83,7 +99,7 @@ const Dashboard = () => {
                                     Total Donated
                                 </p>
                                 <p className="text-2xl font-bold text-charcoal">
-                                    Rs. {userStats.totalDonated}
+                                    Rs. {dashboardData.stats.totalDonations}
                                 </p>
                             </div>
                         </div>
@@ -101,7 +117,7 @@ const Dashboard = () => {
                                     Campaigns Supported
                                 </p>
                                 <p className="text-2xl font-bold text-charcoal">
-                                    {userStats.campaignsSupported}
+                                    {dashboardData.stats.totalDonations}
                                 </p>
                             </div>
                         </div>
@@ -122,7 +138,7 @@ const Dashboard = () => {
                                     Campaigns Created
                                 </p>
                                 <p className="text-2xl font-bold text-charcoal">
-                                    {userStats.campaignsCreated}
+                                    {dashboardData.stats.totalCampaigns}
                                 </p>
                             </div>
                         </div>
@@ -165,9 +181,9 @@ const Dashboard = () => {
                             </Card>
                         ))}
                     </div>
-                ) : userCampaigns.length > 0 ? (
+                ) : dashboardData.campaigns.all.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {userCampaigns.map((campaign) => (
+                        {dashboardData.campaigns.all.map((campaign) => (
                             <CampaignCard
                                 key={campaign._id}
                                 campaign={campaign}
@@ -233,36 +249,41 @@ const Dashboard = () => {
                             </div>
                         </CardContent>
                     </Card>
-                ) : recentDonations.length > 0 ? (
+                ) : dashboardData.recentDonations?.length > 0 ? (
                     <Card className="bg-soft-white">
                         <CardContent className="p-0">
-                            {recentDonations.map((donation, index) => (
-                                <div
-                                    key={donation._id}
-                                    className={`p-4 flex justify-between items-center ${
-                                        index < recentDonations.length - 1
-                                            ? "border-b"
-                                            : ""
-                                    }`}
-                                >
-                                    <div>
-                                        <Link
-                                            to={`/campaign/${donation.campaignId}`}
-                                            className="font-medium text-deep-emerald hover:text-lime-green transition-colors"
-                                        >
-                                            {donation.campaignTitle}
-                                        </Link>
-                                        <p className="text-sm text-charcoal">
-                                            {new Date(
-                                                donation.date
-                                            ).toLocaleDateString()}
-                                        </p>
+                            {dashboardData.recentDonations.map(
+                                (donation, index) => (
+                                    <div
+                                        key={donation._id}
+                                        className={`p-4 flex justify-between items-center ${
+                                            index <
+                                            dashboardData.recentDonations
+                                                .length -
+                                                1
+                                                ? "border-b"
+                                                : ""
+                                        }`}
+                                    >
+                                        <div>
+                                            <Link
+                                                to={`/campaign/${donation.campaignId}`}
+                                                className="font-medium text-deep-emerald hover:text-lime-green transition-colors"
+                                            >
+                                                {donation.campaignTitle}
+                                            </Link>
+                                            <p className="text-sm text-charcoal">
+                                                {new Date(
+                                                    donation.date
+                                                ).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <div className="font-semibold text-charcoal">
+                                            Rs.{donation.amount}
+                                        </div>
                                     </div>
-                                    <div className="font-semibold text-charcoal">
-                                        Rs.{donation.amount}
-                                    </div>
-                                </div>
-                            ))}
+                                )
+                            )}
                         </CardContent>
                     </Card>
                 ) : (

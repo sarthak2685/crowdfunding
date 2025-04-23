@@ -1,9 +1,8 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Context providers
 import { AuthProvider } from "./contexts/AuthContext";
@@ -28,51 +27,69 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/campaign/:id" element={<CampaignDetails />} />
-            
-            {/* User routes */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <UserLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<UserDashboard />} />
-              <Route path="donations" element={<DonationHistory />} />
-              <Route path="create-campaign" element={<CreateCampaign />} />
-            </Route>
-            
-            {/* Admin routes */}
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute role="admin">
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="approvals" element={<CampaignApproval />} />
-            </Route>
-            
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+            <TooltipProvider>
+                {/* Global toast container for react-toastify */}
+                <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={true}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                />
+
+                <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/campaign/:id" element={<CampaignDetails />} />
+
+                    {/* User routes */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <UserLayout />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={<UserDashboard />} />
+                        <Route path="donations" element={<DonationHistory />} />
+                        <Route
+                            path="create-campaign"
+                            element={<CreateCampaign />}
+                        />
+                    </Route>
+
+                    {/* Admin routes */}
+                    <Route
+                        path="/admin"
+                        element={
+                            <ProtectedRoute role="admin">
+                                <AdminLayout />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={<AdminDashboard />} />
+                        <Route
+                            path="approvals"
+                            element={<CampaignApproval />}
+                        />
+                    </Route>
+
+                    {/* 404 route */}
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </TooltipProvider>
+        </AuthProvider>
+    </QueryClientProvider>
 );
 
 export default App;
