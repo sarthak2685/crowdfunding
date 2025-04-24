@@ -16,6 +16,12 @@ import {
     AlertCircle,
     CheckCircle,
     Loader2,
+    Image as ImageIcon,
+    FileText,
+    Video,
+    X,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import {
     Dialog,
@@ -30,6 +36,179 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 
+// Cache for profile images to prevent repeated requests
+const profileImageCache = new Map();
+const DEFAULT_PROFILE_IMAGE = "/default-profile.png";
+
+const MediaViewer = ({ media, onClose, currentIndex, setCurrentIndex }) => {
+    const isImage = media.endsWith('.jpg') || media.endsWith('.jpeg') || media.endsWith('.png') || media.endsWith('.gif');
+    const isVideo = media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov');
+    const isDocument = media.endsWith('.pdf') || media.endsWith('.doc') || media.endsWith('.docx');
+    
+    const handlePrevious = (e) => {
+        e.stopPropagation();
+        setCurrentIndex(prev => prev > 0 ? prev - 1 : prev);
+    };
+    
+    const handleNext = (e) => {
+        e.stopPropagation();
+        setCurrentIndex(prev => prev < mediaCount - 1 ? prev + 1 : prev);
+    };
+    
+    return (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <button 
+                className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full"
+                onClick={onClose}
+            >
+                <X className="w-6 h-6 text-white" />
+            </button>
+            
+            <div className="max-w-4xl max-h-[90vh] w-full relative">
+                {isImage && (
+                    <img 
+                        src={media} 
+                        alt="Campaign media" 
+                        className="max-w-full max-h-[80vh] mx-auto object-contain"
+                    />
+                )}
+                
+                {isVideo && (
+                    <video 
+                        src={media} 
+                        controls 
+                        className="max-w-full max-h-[80vh] mx-auto"
+                        autoPlay
+                    />
+                )}
+                
+                {isDocument && (
+                    <div className="bg-white rounded-lg p-4 max-w-full max-h-[80vh] overflow-auto">
+                        <div className="text-center mb-4">
+                            <FileText className="w-12 h-12 mx-auto text-forest-green mb-2" />
+                            <h3 className="text-lg font-medium text-charcoal">Document Viewer</h3>
+                        </div>
+                        <iframe 
+                            src={media} 
+                            className="w-full h-[70vh]" 
+                            title="Document Viewer"
+                        />
+                        <div className="mt-4 text-center">
+                            <a 
+                                href={media} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="inline-flex items-center px-4 py-2 bg-forest-green text-white rounded-full hover:bg-lime-green"
+                            >
+                                Open in New Tab
+                            </a>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const MediaGallery = ({ mainImage, additionalImages, videos, documents }) => {
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [currentMedia, setCurrentMedia] = useState("");
+    const [currentIndex, setCurrentIndex] = useState(0);
+    
+    const allMedia = [
+        mainImage, 
+        ...additionalImages, 
+        ...videos, 
+        ...documents
+    ].filter(Boolean);
+    
+    const openMedia = (media, index) => {
+        setCurrentMedia(media);
+        setCurrentIndex(index);
+        setViewerOpen(true);
+    };
+    
+    return (
+        <div className="mb-6">
+            {/* Main Image */}
+            <div 
+                className="w-full h-80 mb-4 rounded-lg overflow-hidden cursor-pointer relative group"
+                onClick={() => openMedia(mainImage, 0)}
+            >
+                <img 
+                    src={mainImage} 
+                    alt="Campaign main image" 
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <ImageIcon className="w-12 h-12 text-white" />
+                </div>
+            </div>
+            
+            {/* Thumbnails */}
+            {allMedia.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                    {allMedia.map((media, index) => {
+                        if (!media || (index === 0 && media === mainImage)) return null;
+                        
+                        const isVideo = media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov');
+                        const isDocument = media.endsWith('.pdf') || media.endsWith('.doc') || media.endsWith('.docx');
+                        
+                        return (
+                            <div 
+                                key={index} 
+                                className="h-20 rounded-md overflow-hidden cursor-pointer relative group"
+                                onClick={() => openMedia(media, allMedia.indexOf(media))}
+                            >
+                                {isVideo ? (
+                                    <div className="h-full bg-gray-100 flex items-center justify-center">
+                                        <Video className="w-8 h-8 text-forest-green" />
+                                    </div>
+                                ) : isDocument ? (
+                                    <div className="h-full bg-gray-100 flex items-center justify-center">
+                                        <FileText className="w-8 h-8 text-forest-green" />
+                                    </div>
+                                ) : (
+                                    <img 
+                                        src={media} 
+                                        alt={`Media ${index}`} 
+                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                    />
+                                )}
+                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+            
+            {/* Media Viewer */}
+            {viewerOpen && (
+                <MediaViewer 
+                    media={currentMedia}
+                    onClose={() => setViewerOpen(false)}
+                    currentIndex={currentIndex}
+                    setCurrentIndex={setCurrentIndex}
+                    mediaCount={allMedia.length}
+                />
+            )}
+        </div>
+    );
+};
+
+// Helper function to get profile image, using cache when possible
+const getProfileImage = (profilePic) => {
+    if (!profilePic) return DEFAULT_PROFILE_IMAGE;
+    
+    if (profileImageCache.has(profilePic)) {
+        return profileImageCache.get(profilePic);
+    }
+    
+    const fullUrl = `${import.meta.env.VITE_IMG_URL}${profilePic}`;
+    profileImageCache.set(profilePic, fullUrl);
+    return fullUrl;
+};
+
 const CampaignDetails = () => {
     const { id } = useParams();
     const { currentUser } = useAuth();
@@ -40,6 +219,7 @@ const CampaignDetails = () => {
     const [isDonationDialogOpen, setIsDonationDialogOpen] = useState(false);
     const [isDonating, setIsDonating] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [commentText, setCommentText] = useState("");
 
     useEffect(() => {
         const fetchCampaign = async () => {
@@ -127,7 +307,7 @@ const CampaignDetails = () => {
 
                 toast({
                     title: "Thank you for your donation!",
-                    description: `You have successfully donated $${donationAmount} to this campaign.`,
+                    description: `You have successfully donated ₹${donationAmount} to this campaign.`,
                     duration: 5000,
                 });
             }, 3000);
@@ -140,6 +320,67 @@ const CampaignDetails = () => {
                 description:
                     error.message ||
                     "There was an error processing your donation. Please try again.",
+                duration: 5000,
+            });
+        }
+    };
+
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault();
+        if (!commentText.trim()) return;
+        
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/campaigns/${id}/comments`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    body: JSON.stringify({
+                        content: commentText,
+                    }),
+                }
+            );
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to post comment");
+            }
+            
+            // Add the new comment to the campaign
+            setCampaign(prev => ({
+                ...prev,
+                comments: [
+                    ...prev.comments,
+                    {
+                        _id: Date.now().toString(), // Temporary ID until page refresh
+                        content: commentText,
+                        date: new Date().toISOString(),
+                        user: {
+                            _id: currentUser.id,
+                            name: currentUser.name,
+                            profilePic: currentUser.profilePic,
+                        },
+                    },
+                ],
+            }));
+            
+            setCommentText("");
+            
+            toast({
+                title: "Comment posted",
+                description: "Your comment has been posted successfully.",
+                duration: 3000,
+            });
+        } catch (error) {
+            console.error("Error posting comment:", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error.message || "Failed to post comment. Please try again.",
                 duration: 5000,
             });
         }
@@ -219,12 +460,11 @@ const CampaignDetails = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2">
-                        <img
-                            src={`${import.meta.env.VITE_IMG_URL}${
-                                campaign.imageUrl
-                            }`}
-                            alt={campaign.title}
-                            className="w-full h-80 object-cover rounded-lg mb-6"
+                        <MediaGallery 
+                            mainImage={campaign.imageUrl}
+                            additionalImages={campaign.additionalImages || []}
+                            videos={campaign.videos || []}
+                            documents={campaign.verificationDocuments || []}
                         />
 
                         <h1 className="text-3xl font-bold mb-4 text-charcoal">
@@ -237,13 +477,7 @@ const CampaignDetails = () => {
 
                         <div className="flex items-center mb-8">
                             <img
-                                src={
-                                    campaign.creator.profilePic
-                                        ? `${import.meta.env.VITE_IMG_URL}${
-                                              campaign.creator.profilePic
-                                          }`
-                                        : "/default-profile.png"
-                                }
+                                src={getProfileImage(campaign.creator.profilePic)}
                                 alt={campaign.creator.name}
                                 className="w-10 h-10 rounded-full mr-3 object-cover"
                             />
@@ -283,105 +517,161 @@ const CampaignDetails = () => {
                                 <div
                                     className="prose prose-lg max-w-none"
                                     dangerouslySetInnerHTML={{
-                                        __html: campaign.longDescription,
+                                        __html: campaign.longDescription || campaign.story || campaign.description,
                                     }}
                                 ></div>
+                                
+                                {campaign.videos && campaign.videos.length > 0 && (
+                                    <div className="mt-8">
+                                        <h3 className="text-xl font-semibold mb-4 text-forest-green">Campaign Video</h3>
+                                        <div className="relative pt-[56.25%] rounded-lg overflow-hidden">
+                                            <video 
+                                                src={campaign.videos[0]} 
+                                                controls
+                                                className="absolute top-0 left-0 w-full h-full object-cover"
+                                                poster={campaign.imageUrl}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {campaign.verificationDocuments && campaign.verificationDocuments.length > 0 && (
+                                    <div className="mt-8">
+                                        <h3 className="text-xl font-semibold mb-4 text-forest-green">Verification Documents</h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {campaign.verificationDocuments.map((doc, index) => (
+                                                <a 
+                                                    key={index}
+                                                    href={doc}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center p-4 border border-mint-green rounded-lg hover:bg-mint-green/10 transition-colors"
+                                                >
+                                                    <FileText className="h-8 w-8 text-forest-green mr-3" />
+                                                    <div>
+                                                        <p className="font-medium text-forest-green">Document {index + 1}</p>
+                                                        <p className="text-sm text-gray-500">Click to view</p>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </TabsContent>
 
                             <TabsContent value="updates" className="space-y-6">
-                                {campaign.updates.map((update) => (
-                                    <Card
-                                        key={update._id}
-                                        className="overflow-hidden border-mint-green"
-                                    >
-                                        <div className="bg-mint-green/10 px-6 py-3 border-b border-mint-green">
-                                            <div className="flex justify-between items-center">
-                                                <h3 className="font-semibold text-forest-green">
-                                                    {update.title}
-                                                </h3>
-                                                <span className="text-sm text-gray-500">
-                                                    {format(
-                                                        new Date(update.date),
-                                                        "MMM d, yyyy"
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <CardContent className="p-6">
-                                            <p className="text-charcoal">
-                                                {update.content}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </TabsContent>
-
-                            <TabsContent value="comments" className="space-y-6">
-                                {campaign.comments.map((comment) => (
-                                    <div
-                                        key={comment._id}
-                                        className="border-b border-mint-green pb-6 last:border-0"
-                                    >
-                                        <div className="flex items-start gap-4">
-                                            <img
-                                                src={
-                                                    comment.user.profilePic
-                                                        ? `${
-                                                              import.meta.env
-                                                                  .VITE_IMG_URL
-                                                          }${
-                                                              comment.user
-                                                                  .profilePic
-                                                          }`
-                                                        : "/default-profile.png"
-                                                }
-                                                alt={comment.user.name}
-                                                className="w-10 h-10 rounded-full object-cover"
-                                            />
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <p className="font-medium text-charcoal">
-                                                        {comment.user.name}
-                                                    </p>
+                                {campaign.updates.length === 0 ? (
+                                    <div className="text-center py-12 border border-dashed border-mint-green rounded-lg">
+                                        <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-xl font-medium mb-2 text-charcoal">No Updates Yet</h3>
+                                        <p className="text-gray-600">
+                                            The campaign creator hasn't posted any updates yet.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    campaign.updates.map((update) => (
+                                        <Card
+                                            key={update._id}
+                                            className="overflow-hidden border-mint-green"
+                                        >
+                                            <div className="bg-mint-green/10 px-6 py-3 border-b border-mint-green">
+                                                <div className="flex justify-between items-center">
+                                                    <h3 className="font-semibold text-forest-green">
+                                                        {update.title}
+                                                    </h3>
                                                     <span className="text-sm text-gray-500">
                                                         {format(
-                                                            new Date(
-                                                                comment.date
-                                                            ),
+                                                            new Date(update.date),
                                                             "MMM d, yyyy"
                                                         )}
                                                     </span>
                                                 </div>
-                                                <p className="text-gray-700">
-                                                    {comment.content}
+                                            </div>
+                                            <CardContent className="p-6">
+                                                <p className="text-charcoal">
+                                                    {update.content}
                                                 </p>
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                )}
+                            </TabsContent>
+
+                            <TabsContent value="comments" className="space-y-6">
+                                {campaign.comments.length === 0 ? (
+                                    <div className="text-center py-12 border border-dashed border-mint-green rounded-lg mb-8">
+                                        <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-xl font-medium mb-2 text-charcoal">No Comments Yet</h3>
+                                        <p className="text-gray-600">
+                                            Be the first to leave a comment on this campaign.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    campaign.comments.map((comment) => (
+                                        <div
+                                            key={comment._id}
+                                            className="border-b border-mint-green pb-6 last:border-0"
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <img
+                                                    src={getProfileImage(comment.user.profilePic)}
+                                                    alt={comment.user.name}
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <p className="font-medium text-charcoal">
+                                                            {comment.user.name}
+                                                        </p>
+                                                        <span className="text-sm text-gray-500">
+                                                            {format(
+                                                                new Date(
+                                                                    comment.date
+                                                                ),
+                                                                "MMM d, yyyy"
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-gray-700">
+                                                        {comment.content}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
 
                                 {currentUser ? (
                                     <div className="mt-8 pt-6 border-t border-mint-green">
                                         <h3 className="font-semibold mb-4 text-charcoal">
                                             Leave a comment
                                         </h3>
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-mint-green/20 flex items-center justify-center">
-                                                <User
-                                                    size={20}
-                                                    className="text-forest-green"
-                                                />
+                                        <form onSubmit={handleCommentSubmit}>
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-mint-green/20 flex items-center justify-center">
+                                                    <User
+                                                        size={20}
+                                                        className="text-forest-green"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <Input
+                                                        className="mb-3"
+                                                        placeholder="Write your comment..."
+                                                        value={commentText}
+                                                        onChange={(e) => setCommentText(e.target.value)}
+                                                        required
+                                                    />
+                                                    <Button 
+                                                        type="submit"
+                                                        className="bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full"
+                                                        disabled={!commentText.trim()}
+                                                    >
+                                                        Post Comment
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                                <Input
-                                                    className="mb-3"
-                                                    placeholder="Write your comment..."
-                                                />
-                                                <Button className="bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full">
-                                                    Post Comment
-                                                </Button>
-                                            </div>
-                                        </div>
+                                        </form>
                                     </div>
                                 ) : (
                                     <div className="mt-8 pt-6 border-t border-mint-green text-center">
@@ -462,7 +752,7 @@ const CampaignDetails = () => {
 
                                     {/* Donation Button */}
                                     <Button
-                                        className="flex flex-wrap w-full mb-4 bg-forest-green  hover:bg-lime-green text-white px-4 py-2 rounded-full"
+                                        className="flex flex-wrap w-full mb-4 bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full"
                                         onClick={handleDonateClick}
                                     >
                                         <Heart className="mr-2 h-5 w-5" />
@@ -511,14 +801,7 @@ const CampaignDetails = () => {
                                             </p>
                                             <p className="text-sm">
                                                 {format(
-                                                    new Date(
-                                                        new Date().getTime() +
-                                                            campaign.daysLeft *
-                                                                24 *
-                                                                60 *
-                                                                60 *
-                                                                1000
-                                                    ),
+                                                    new Date(campaign.endDate),
                                                     "MMMM d, yyyy"
                                                 )}
                                             </p>
