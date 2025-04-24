@@ -47,7 +47,7 @@ const CampaignDetails = () => {
                 setIsLoading(true);
 
                 const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/api/campaigns/${id}`
+                    `${import.meta.env.VITE_API_URL}/campaigns/${id}`
                 );
                 const data = await response.json();
 

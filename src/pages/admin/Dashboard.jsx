@@ -47,6 +47,8 @@ const AdminDashboard = () => {
   const [recentCampaigns, setRecentCampaigns] = useState([]);
   const [fundraisingData, setFundraisingData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [rejectedCampaigns, setRejectedCampaigns] = useState([]);
+
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -64,31 +66,30 @@ const AdminDashboard = () => {
         }
   
         const data = await response.json();
-        console.log("API Response:", data); // Keep this for debugging
-        
-        // Updated data handling based on API response structure
-        if (data.data) {
-          // If data comes in a nested 'data' property
+        console.log("API Response:", data); // Debug log
+  
+        if (data?.data) {
+          const d = data.data;
+  
           setStats({
-            totalCampaigns: data.data.totalCampaigns || 0,
-            pendingApprovals: data.data.pendingApprovals || 0,
-            totalUsers: data.data.totalUsers || 0,
-            totalDonations: data.data.totalDonations || 0,
+            totalCampaigns: d.totalCampaigns || 0,
+            pendingApprovals: d.pendingApprovals || 0,
+            totalUsers: d.totalUsers || 0,
+            totalDonations: d.totalDonations || 0,
           });
-          
-          setRecentCampaigns(data.data.recentCampaigns || []);
-          setFundraisingData(data.data.fundraisingData || []);
-        } else {
-          // If data is at the root level
-          setStats({
-            totalCampaigns: data.totalCampaigns || 0,
-            pendingApprovals: data.pendingApprovals || 0,
-            totalUsers: data.totalUsers || 0,
-            totalDonations: data.totalDonations || 0,
-          });
-          
-          setRecentCampaigns(data.recentCampaigns || []);
-          setFundraisingData(data.fundraisingData || []);
+  
+          setRecentCampaigns([
+            ...(d.campaignsByStatus?.pending || []),
+            ...(d.campaignsByStatus?.active || []),
+            ...(d.campaignsByStatus?.rejected || []),
+          ]);
+  
+          setFundraisingData(d.monthlyDonations || []);
+  
+          // Optional: separate states if you want to manage by status
+          setActiveCampaigns(d.campaignsByStatus?.active || []);
+          setPendingCampaigns(d.campaignsByStatus?.pending || []);
+          setRejectedCampaigns(d.campaignsByStatus?.rejected || []);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -105,6 +106,7 @@ const AdminDashboard = () => {
   
     fetchDashboardData();
   }, []);
+  
   
   
 
