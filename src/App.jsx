@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // <- Added Navigate
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Context providers
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -24,13 +24,23 @@ import UserLayout from "./layouts/UserLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Redirect wrapper for /login
+const LoginRedirectWrapper = () => {
+    const { isAuthenticated, currentUser } = useAuth();
+
+    if (isAuthenticated) {
+        return <Navigate to={currentUser?.role === "admin" ? "/admin" : "/dashboard"} />;
+    }
+
+    return <Login />;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <AuthProvider>
             <TooltipProvider>
-                {/* Global toast container for react-toastify */}
                 <ToastContainer
                     position="top-right"
                     autoClose={3000}
@@ -45,9 +55,8 @@ const App = () => (
                 />
 
                 <Routes>
-                    {/* Public routes */}
                     <Route path="/" element={<LandingPage />} />
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/login" element={<LoginRedirectWrapper />} /> {/* <- Updated */}
                     <Route path="/register" element={<Register />} />
                     <Route path="/campaign/:id" element={<CampaignDetails />} />
 
@@ -62,10 +71,7 @@ const App = () => (
                     >
                         <Route index element={<UserDashboard />} />
                         <Route path="donations" element={<DonationHistory />} />
-                        <Route
-                            path="create-campaign"
-                            element={<CreateCampaign />}
-                        />
+                        <Route path="create-campaign" element={<CreateCampaign />} />
                     </Route>
 
                     {/* Admin routes */}
@@ -78,13 +84,9 @@ const App = () => (
                         }
                     >
                         <Route index element={<AdminDashboard />} />
-                        <Route
-                            path="approvals"
-                            element={<CampaignApproval />}
-                        />
+                        <Route path="approvals" element={<CampaignApproval />} />
                     </Route>
 
-                    {/* 404 route */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </TooltipProvider>

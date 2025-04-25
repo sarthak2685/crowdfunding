@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -13,45 +12,31 @@ export const AuthProvider = ({ children }) => {
     const navigate = useNavigate();
     const { toast } = useToast();
 
-    // Check if there's a token in localStorage and validate it
     useEffect(() => {
         const verifyToken = async () => {
             const token = localStorage.getItem("token");
 
             if (token) {
                 try {
-                    const apiUrl =
-                        import.meta.env.VITE_API_URL ||
-                        "http://localhost:5000/api";
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
                     const response = await fetch(`${apiUrl}/auth/me`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+                        headers: { Authorization: `Bearer ${token}` },
                     });
 
                     if (response.ok) {
                         const userData = await response.json();
-
                         if (userData.success && userData.data) {
                             setCurrentUser(userData.data);
                             setIsAuthenticated(true);
                         } else {
-                            // Invalid response format
                             localStorage.removeItem("token");
-                            setCurrentUser(null);
-                            setIsAuthenticated(false);
                         }
                     } else {
-                        // If token is invalid or expired, clear it
                         localStorage.removeItem("token");
-                        setCurrentUser(null);
-                        setIsAuthenticated(false);
                     }
                 } catch (error) {
                     console.error("Auth verification error:", error);
                     localStorage.removeItem("token");
-                    setCurrentUser(null);
-                    setIsAuthenticated(false);
                 }
             }
 
@@ -61,16 +46,12 @@ export const AuthProvider = ({ children }) => {
         verifyToken();
     }, []);
 
-    // Login function
     const login = async (email, password) => {
         try {
-            const apiUrl =
-                import.meta.env.VITE_API_URL || "https://localhost:5000/api";
+            const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
             const response = await fetch(`${apiUrl}/auth/login`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
 
@@ -86,12 +67,14 @@ export const AuthProvider = ({ children }) => {
                     description: `Welcome back, ${data.user.name}!`,
                 });
 
-                // Redirect based on user role
-                if (data.user.role === "admin") {
-                    navigate("/admin");
-                } else {
-                    navigate("/dashboard");
-                }
+                // Wait for state update, then navigate
+                setTimeout(() => {
+                    if (data.user.role === "admin") {
+                        navigate("/admin");
+                    } else {
+                        navigate("/dashboard");
+                    }
+                }, 0);
 
                 return { success: true };
             } else {
@@ -100,36 +83,25 @@ export const AuthProvider = ({ children }) => {
                     description: data.message || "Invalid credentials",
                     variant: "destructive",
                 });
-
-                return {
-                    success: false,
-                    message: data.message || "Invalid credentials",
-                };
+                return { success: false, message: data.message || "Invalid credentials" };
             }
         } catch (error) {
             console.error("Login error:", error);
-
             toast({
                 title: "Login Error",
-                description:
-                    "Could not connect to the server. Please try again later.",
+                description: "Could not connect to the server. Please try again later.",
                 variant: "destructive",
             });
-
             return { success: false, message: "Server connection error" };
         }
     };
 
-    // Register function
-    const register = async ({name, email, password, phone}) => {
+    const register = async ({ name, email, password, phone }) => {
         try {
-            const apiUrl =
-                import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+            const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
             const response = await fetch(`${apiUrl}/auth/register`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, password, phone }),
             });
 
@@ -153,27 +125,19 @@ export const AuthProvider = ({ children }) => {
                     description: data.message || "Failed to create account",
                     variant: "destructive",
                 });
-
-                return {
-                    success: false,
-                    message: data.message || "Registration failed",
-                };
+                return { success: false, message: data.message || "Registration failed" };
             }
         } catch (error) {
             console.error("Registration error:", error);
-
             toast({
                 title: "Registration Error",
-                description:
-                    "Could not connect to the server. Please try again later.",
+                description: "Could not connect to the server. Please try again later.",
                 variant: "destructive",
             });
-
             return { success: false, message: "Server connection error" };
         }
     };
 
-    // Logout function
     const logout = () => {
         localStorage.removeItem("token");
         setCurrentUser(null);
@@ -193,10 +157,12 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        isAdmin: currentUser?.role === "admin", // Derive isAdmin based on the role
+        isAdmin: currentUser?.role === "admin",
     };
 
     return (
-        <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
     );
 };
