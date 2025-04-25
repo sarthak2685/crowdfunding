@@ -40,11 +40,7 @@ import { format } from "date-fns";
 const profileImageCache = new Map();
 const DEFAULT_PROFILE_IMAGE = "/default-profile.png";
 
-const MediaViewer = ({ media, onClose, currentIndex, setCurrentIndex }) => {
-    const isImage = media.endsWith('.jpg') || media.endsWith('.jpeg') || media.endsWith('.png') || media.endsWith('.gif');
-    const isVideo = media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov');
-    const isDocument = media.endsWith('.pdf') || media.endsWith('.doc') || media.endsWith('.docx');
-    
+const MediaViewer = ({ media, onClose, currentIndex, setCurrentIndex, mediaCount, isImage }) => {
     const handlePrevious = (e) => {
         e.stopPropagation();
         setCurrentIndex(prev => prev > 0 ? prev - 1 : prev);
@@ -65,44 +61,75 @@ const MediaViewer = ({ media, onClose, currentIndex, setCurrentIndex }) => {
             </button>
             
             <div className="max-w-4xl max-h-[90vh] w-full relative">
-                {isImage && (
+                {isImage ? (
                     <img 
                         src={media} 
                         alt="Campaign media" 
                         className="max-w-full max-h-[80vh] mx-auto object-contain"
                     />
-                )}
-                
-                {isVideo && (
-                    <video 
-                        src={media} 
-                        controls 
-                        className="max-w-full max-h-[80vh] mx-auto"
-                        autoPlay
-                    />
-                )}
-                
-                {isDocument && (
+                ) : (
                     <div className="bg-white rounded-lg p-4 max-w-full max-h-[80vh] overflow-auto">
                         <div className="text-center mb-4">
-                            <FileText className="w-12 h-12 mx-auto text-forest-green mb-2" />
-                            <h3 className="text-lg font-medium text-charcoal">Document Viewer</h3>
+                            {media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov') ? (
+                                <>
+                                    <Video className="w-12 h-12 mx-auto text-forest-green mb-2" />
+                                    <h3 className="text-lg font-medium text-charcoal">Video Player</h3>
+                                </>
+                            ) : (
+                                <>
+                                    <FileText className="w-12 h-12 mx-auto text-forest-green mb-2" />
+                                    <h3 className="text-lg font-medium text-charcoal">Document Viewer</h3>
+                                </>
+                            )}
+                            <p className="text-gray-500 mt-2">This media type doesn't support slideshow</p>
                         </div>
-                        <iframe 
-                            src={media} 
-                            className="w-full h-[70vh]" 
-                            title="Document Viewer"
-                        />
-                        <div className="mt-4 text-center">
-                            <a 
-                                href={media} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="inline-flex items-center px-4 py-2 bg-forest-green text-white rounded-full hover:bg-lime-green"
-                            >
-                                Open in New Tab
-                            </a>
-                        </div>
+                        {media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov') ? (
+                            <video 
+                                src={media} 
+                                controls 
+                                className="w-full max-h-[70vh]"
+                                autoPlay
+                            />
+                        ) : (
+                            <iframe 
+                                src={media} 
+                                className="w-full h-[70vh]" 
+                                title="Document Viewer"
+                            />
+                        )}
+                    </div>
+                )}
+
+                {/* Navigation Arrows - Only show for images */}
+                {isImage && mediaCount > 1 && (
+                    <>
+                        <button
+                            onClick={handlePrevious}
+                            disabled={currentIndex === 0}
+                            className={`absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/30 ${currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <ChevronLeft className="w-8 h-8 text-white" />
+                        </button>
+                        <button
+                            onClick={handleNext}
+                            disabled={currentIndex === mediaCount - 1}
+                            className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/30 ${currentIndex === mediaCount - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <ChevronRight className="w-8 h-8 text-white" />
+                        </button>
+                    </>
+                )}
+
+                {/* Indicator Dots - Only show for images */}
+                {isImage && mediaCount > 1 && (
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                        {Array.from({ length: mediaCount }).map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentIndex(index)}
+                                className={`w-3 h-3 rounded-full transition-all ${currentIndex === index ? 'bg-white w-6' : 'bg-white/50'}`}
+                            />
+                        ))}
                     </div>
                 )}
             </div>
@@ -114,51 +141,121 @@ const MediaGallery = ({ mainImage, additionalImages, videos, documents }) => {
     const [viewerOpen, setViewerOpen] = useState(false);
     const [currentMedia, setCurrentMedia] = useState("");
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [autoSlide, setAutoSlide] = useState(false);
+    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     
-    const allMedia = [
-        mainImage, 
-        ...additionalImages, 
-        ...videos, 
-        ...documents
-    ].filter(Boolean);
-    
+    // Separate arrays for different media types
+    const allImages = [mainImage, ...additionalImages].filter(Boolean);
+    const allVideos = videos.filter(Boolean);
+    const allDocs = documents.filter(Boolean);
+    const allItems = [...allImages, ...allVideos, ...allDocs];
+
+    // Auto slide functionality (5 seconds) - only for images
+    useEffect(() => {
+        if (!autoSlide || !viewerOpen || allImages.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentIndex(prev => (prev < allImages.length - 1 ? prev + 1 : 0));
+        }, 5000); // 5 seconds
+
+        return () => clearInterval(interval);
+    }, [autoSlide, viewerOpen, allImages.length]);
+
+    // Auto slide for main image display (5 seconds)
+    useEffect(() => {
+        if (allImages.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentSlideIndex(prev => (prev < allImages.length - 1 ? prev + 1 : 0));
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [allImages.length]);
+
     const openMedia = (media, index) => {
         setCurrentMedia(media);
         setCurrentIndex(index);
         setViewerOpen(true);
+        // Only enable auto-slide if it's an image
+        setAutoSlide(allImages.includes(media));
     };
-    
+
+    // Check if current media is an image
+    const isCurrentMediaImage = allImages.includes(currentMedia);
+    // Get the image-only index for slideshow navigation
+    const currentImageIndex = isCurrentMediaImage ? allImages.indexOf(currentMedia) : 0;
+
     return (
-        <div className="mb-6">
-            {/* Main Image */}
-            <div 
-                className="w-full h-80 mb-4 rounded-lg overflow-hidden cursor-pointer relative group"
-                onClick={() => openMedia(mainImage, 0)}
-            >
-                <img 
-                    src={mainImage} 
-                    alt="Campaign main image" 
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <ImageIcon className="w-12 h-12 text-white" />
-                </div>
+        <div className="mb-6 relative">
+            {/* Main Image with Slide Controls */}
+            <div className="relative w-full h-[500px] mb-4 rounded-lg overflow-hidden">
+                {allImages[currentSlideIndex] && (
+                    <>
+                        <img 
+                            src={allImages[currentSlideIndex]} 
+                            alt="Campaign main image" 
+                            className="w-full h-full object-contain cursor-pointer"
+                            onClick={() => openMedia(allImages[currentSlideIndex], allItems.indexOf(allImages[currentSlideIndex]))}
+                        />
+                        {/* Navigation Arrows for Main Image - Only show if there are multiple images */}
+                        {allImages.length > 1 && (
+                            <>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newIndex = currentSlideIndex > 0 ? currentSlideIndex - 1 : allImages.length - 1;
+                                        setCurrentSlideIndex(newIndex);
+                                    }}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white"
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newIndex = currentSlideIndex < allImages.length - 1 ? currentSlideIndex + 1 : 0;
+                                        setCurrentSlideIndex(newIndex);
+                                    }}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white"
+                                >
+                                    <ChevronRight className="w-6 h-6" />
+                                </button>
+                            </>
+                        )}
+                    </>
+                )}
+                
+                {/* Indicator Dots for Main Image - Only show if there are multiple images */}
+                {allImages.length > 1 && (
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                        {allImages.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentSlideIndex(index);
+                                }}
+                                className={`w-2 h-2 rounded-full transition-all ${currentSlideIndex === index ? 'bg-white w-4' : 'bg-white/50'}`}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
             
-            {/* Thumbnails */}
-            {allMedia.length > 1 && (
+            {/* Thumbnails Grid */}
+            {allItems.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
-                    {allMedia.map((media, index) => {
-                        if (!media || (index === 0 && media === mainImage)) return null;
+                    {allItems.map((media, index) => {
+                        if (media === allImages[currentSlideIndex]) return null; // Skip currently displayed main image
                         
-                        const isVideo = media.endsWith('.mp4') || media.endsWith('.webm') || media.endsWith('.mov');
-                        const isDocument = media.endsWith('.pdf') || media.endsWith('.doc') || media.endsWith('.docx');
+                        const isVideo = allVideos.includes(media);
+                        const isDocument = allDocs.includes(media);
                         
                         return (
                             <div 
-                                key={index} 
-                                className="h-20 rounded-md overflow-hidden cursor-pointer relative group"
-                                onClick={() => openMedia(media, allMedia.indexOf(media))}
+                                key={index}
+                                className="h-28 rounded-md overflow-hidden cursor-pointer relative group"
+                                onClick={() => openMedia(media, index)}
                             >
                                 {isVideo ? (
                                     <div className="h-full bg-gray-100 flex items-center justify-center">
@@ -169,27 +266,33 @@ const MediaGallery = ({ mainImage, additionalImages, videos, documents }) => {
                                         <FileText className="w-8 h-8 text-forest-green" />
                                     </div>
                                 ) : (
-                                    <img 
-                                        src={media} 
-                                        alt={`Media ${index}`} 
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                                    />
+                                    <>
+                                        <img 
+                                            src={media} 
+                                            alt={`Media ${index}`} 
+                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </>
                                 )}
-                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                         );
                     })}
                 </div>
             )}
             
-            {/* Media Viewer */}
+            {/* Media Viewer Modal */}
             {viewerOpen && (
                 <MediaViewer 
                     media={currentMedia}
-                    onClose={() => setViewerOpen(false)}
-                    currentIndex={currentIndex}
+                    onClose={() => {
+                        setViewerOpen(false);
+                        setAutoSlide(false);
+                    }}
+                    currentIndex={isCurrentMediaImage ? currentImageIndex : 0}
                     setCurrentIndex={setCurrentIndex}
-                    mediaCount={allMedia.length}
+                    mediaCount={isCurrentMediaImage ? allImages.length : 1}
+                    isImage={isCurrentMediaImage}
                 />
             )}
         </div>
