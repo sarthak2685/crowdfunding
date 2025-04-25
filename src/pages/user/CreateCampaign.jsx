@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
     Select,
@@ -23,7 +23,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, CheckIcon, Upload } from "lucide-react";
+import { AlertCircle, Upload, X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CreateCampaign = () => {
@@ -31,16 +31,19 @@ const CreateCampaign = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
 
-    const [formData, setFormData] = useState({
+    const initialFormState = {
         title: "",
         description: "",
         story: "",
         category: "",
         goalAmount: "",
         duration: "",
-        image: null,
-    });
+        images: [],
+        videos: [],
+        documents: [],
+    };
 
+    const [formData, setFormData] = useState(initialFormState);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImages, setPreviewImages] = useState([]);
@@ -64,7 +67,6 @@ const CreateCampaign = () => {
             [name]: value,
         });
 
-        // Clear error for the field
         if (errors[name]) {
             setErrors({
                 ...errors,
@@ -79,7 +81,6 @@ const CreateCampaign = () => {
             [name]: value,
         });
 
-        // Clear error for the field
         if (errors[name]) {
             setErrors({
                 ...errors,
@@ -90,27 +91,70 @@ const CreateCampaign = () => {
 
     const handleImagesChange = (e) => {
         const files = Array.from(e.target.files);
-        console.log("images", files);
+        
+        // Validate maximum 5 images
+        if (files.length + formData.images.length > 5) {
+            toast.error("You can upload maximum 5 images");
+            return;
+        }
+        
+        // Validate file types
+        const validTypes = ["image/jpeg", "image/png", "image/jpg"];
+        const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+        
+        if (invalidFiles.length > 0) {
+            toast.error("Only JPG, JPEG, and PNG files are allowed");
+            return;
+        }
+        
+        // Validate file sizes (5MB max)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const oversizedFiles = files.filter(file => file.size > maxSize);
+        
+        if (oversizedFiles.length > 0) {
+            toast.error("Some images exceed the 5MB size limit");
+            return;
+        }
+        
         setFormData({
             ...formData,
-            image: files,
+            images: [...formData.images, ...files].slice(0, 5),
         });
-        setPreviewImages(files.map((file) => URL.createObjectURL(file)));
+        
+        // Create preview URLs for new files only
+        const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+        setPreviewImages([...previewImages, ...newPreviewUrls].slice(0, 5));
+    };
+
+    const removeImage = (index) => {
+        const newImages = [...formData.images];
+        newImages.splice(index, 1);
+        setFormData({
+            ...formData,
+            images: newImages,
+        });
+
+        const newPreviews = [...previewImages];
+        // Revoke the object URL before removing
+        URL.revokeObjectURL(newPreviews[index]);
+        newPreviews.splice(index, 1);
+        setPreviewImages(newPreviews);
     };
 
     const handleVideosChange = (e) => {
         const files = Array.from(e.target.files);
-        console.log("videos", files);
         setFormData({
             ...formData,
             videos: files,
         });
+        
+        // Revoke previous video URLs
+        previewVideos.forEach(url => URL.revokeObjectURL(url));
         setPreviewVideos(files.map((file) => URL.createObjectURL(file)));
     };
 
     const handleDocumentsChange = (e) => {
         const files = Array.from(e.target.files);
-        console.log("files", files);
         setFormData({
             ...formData,
             documents: files,
@@ -122,17 +166,13 @@ const CreateCampaign = () => {
         const newErrors = {};
 
         if (!formData.title.trim()) newErrors.title = "Title is required";
-        if (!formData.description.trim())
-            newErrors.description = "Description is required";
+        if (!formData.description.trim()) newErrors.description = "Description is required";
         if (!formData.story.trim()) newErrors.story = "Story is required";
         if (!formData.category) newErrors.category = "Category is required";
 
         if (!formData.goalAmount) {
             newErrors.goalAmount = "Goal amount is required";
-        } else if (
-            isNaN(formData.goalAmount) ||
-            Number(formData.goalAmount) <= 0
-        ) {
+        } else if (isNaN(formData.goalAmount) || Number(formData.goalAmount) <= 0) {
             newErrors.goalAmount = "Goal amount must be a positive number";
         }
 
@@ -142,35 +182,47 @@ const CreateCampaign = () => {
             newErrors.duration = "Duration must be a positive number";
         }
 
-        if (!formData.image || formData.image.length === 0)
-            newErrors.image = "Campaign image is required";
-        console.log(
-            "formData.image",
-            formData.image,
-            formData.videos,
-            formData.documents
-        );
-        if (!formData.videos || formData.videos.length === 0)
+        if (!formData.images || formData.images.length === 0) {
+            newErrors.images = "At least one campaign image is required";
+        } else if (formData.images.length > 5) {
+            newErrors.images = "Maximum 5 images allowed";
+        }
+
+        if (!formData.videos || formData.videos.length === 0) {
             newErrors.videos = "At least one campaign video is required";
-        if (!formData.documents || formData.documents.length === 0)
+        }
+
+        if (!formData.documents || formData.documents.length === 0) {
             newErrors.documents = "At least one document is required";
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
+    const resetForm = () => {
+        // Revoke all object URLs
+        previewImages.forEach(url => URL.revokeObjectURL(url));
+        previewVideos.forEach(url => URL.revokeObjectURL(url));
+        
+        setFormData(initialFormState);
+        setPreviewImages([]);
+        setPreviewVideos([]);
+        setUploadedDocuments([]);
+        setErrors({});
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         if (!validateForm()) return;
         setIsSubmitting(true);
-
+    
         const apiUrl = `${import.meta.env.VITE_API_URL}/campaigns`;
-
+    
         try {
-            // Create FormData for all data including files
             const formDataToSend = new FormData();
-
+    
             // Append text fields
             formDataToSend.append("title", formData.title);
             formDataToSend.append("description", formData.description);
@@ -178,89 +230,91 @@ const CreateCampaign = () => {
             formDataToSend.append("category", formData.category);
             formDataToSend.append("goalAmount", formData.goalAmount);
             formDataToSend.append("duration", formData.duration);
-
-            // Append files
-            (formData.image || []).forEach((file, index) => {
-                formDataToSend.append(`images`, file);
-            });
-
-            (formData.videos || []).forEach((file, index) => {
-                formDataToSend.append(`videos`, file);
-            });
-
-            (formData.documents || []).forEach((file, index) => {
-                formDataToSend.append(`verificationDocument`, file);
-            });
-
-            // Step 2: Send all data including files in one request
+    
+            // Handle images
+            if (formData.images.length > 0) {
+                formDataToSend.append("images", formData.images[0]);
+                const additionalImages = formData.images.slice(1);
+                additionalImages.forEach((file) => {
+                    formDataToSend.append("images", file);
+                });
+            }
+    
+            // Append videos
+            if (formData.videos.length > 0) {
+                formData.videos.forEach((file) => {
+                    formDataToSend.append("videos", file);
+                });
+            }
+    
+            // Append documents
+            if (formData.documents.length > 0) {
+                formData.documents.forEach((file) => {
+                    formDataToSend.append("verificationDocument", file);
+                });
+            }
+    
             const response = await fetch(apiUrl, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    // Don't set Content-Type header - the browser will set it automatically with the correct boundary
                 },
                 body: formDataToSend,
             });
-
+    
             const result = await response.json();
-
+    
+            if (!response.ok) {
+                throw new Error(result.message || "Failed to create campaign");
+            }
+    
             if (result.success) {
                 toast.success("🎉 Campaign Created! Your campaign has been created and is pending approval.", {
                     position: "top-right",
-                    autoClose: 4000,
-                    hideProgressBar: true,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    style: {
-                      backgroundColor: "#16a34a", // Tailwind's green-600
-                      color: "white",
-                      boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
-                      border: "none",
-                      width: "30%",
-                      maxWidth: "400px",
-                      zIndex: 9999,
-                    },
-                  });
-                navigate("/dashboard");
-            } else {
-                toast.error(`❌ ${result.message || "Something went wrong. Please try again."}`, {
-                    position: "top-right",
                     autoClose: 5000,
-                    hideProgressBar: true,
+                    hideProgressBar: false,
                     closeOnClick: true,
                     pauseOnHover: true,
                     draggable: true,
+                    progress: undefined,
                     style: {
-                      backgroundColor: "#d97706", // amber-600
-                      color: "white",
-                      boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
-                      border: "none",
-                      width: "30%",
-                      maxWidth: "400px",
-                      zIndex: 9999,
+                        backgroundColor: "#16a34a",
+                        color: "white",
+                        boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
+                        border: "none",
+                        width: "100%",
+                        maxWidth: "400px",
                     },
-                  });
+                });
+                
+                // Reset the form
+                resetForm();
+                
+                // Navigate after a short delay
+                setTimeout(() => {
+                    navigate("/dashboard");
+                }, 2000);
+            } else {
+                throw new Error(result.message || "Something went wrong");
             }
         } catch (error) {
             console.error("Error creating campaign:", error);
-
-            toast.error(`⚠️ Upload or Server Error: ${error.message || "There was a problem uploading your media."}`, {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: true,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              style: {
-                backgroundColor: "#dc2626", // Tailwind's red-600
-                color: "white",
-                boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
-                border: "none",
-                width: "30%",
-                maxWidth: "400px",
-                zIndex: 9999,
-              },
+            toast.error(`⚠ Error: ${error.message || "There was a problem creating your campaign."}`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                style: {
+                    backgroundColor: "#dc2626",
+                    color: "white",
+                    boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
+                    border: "none",
+                    width: "100%",
+                    maxWidth: "400px",
+                },
             });
         } finally {
             setIsSubmitting(false);
@@ -494,7 +548,7 @@ const CreateCampaign = () => {
                                         htmlFor="images"
                                         className="text-charcoal"
                                     >
-                                        Campaign Images
+                                        Campaign Images (First image will be main image)
                                     </Label>
                                     <div
                                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-soft-white transition-colors ${
@@ -519,25 +573,60 @@ const CreateCampaign = () => {
                                         />
                                         <Upload className="w-10 h-10 mx-auto text-mint-green mb-2" />
                                         <p className="text-sm text-charcoal">
-                                            Click to upload images (JPG, JPEG,
-                                            PNG)
+                                            Click to upload images (JPG, JPEG, PNG)
                                         </p>
                                         <p className="text-xs text-gray-400 mt-1">
-                                            Max size per file: 5MB
+                                            Max 5 images (First image will be main image)
                                         </p>
                                     </div>
-                                    {previewImages?.length > 0 && (
-                                        <div className="grid grid-cols-2 gap-4 mt-2">
-                                            {previewImages.map((url, idx) => (
-                                                <img
-                                                    key={idx}
-                                                    src={url}
-                                                    alt={`Preview ${idx + 1}`}
-                                                    className="h-32 w-full object-cover rounded-lg"
-                                                />
-                                            ))}
+                                    
+                                    {/* Image Previews */}
+                                    {previewImages.length > 0 && (
+                                        <div className="mt-4">
+                                            <p className="text-sm text-charcoal mb-2">
+                                                <span className="font-semibold">
+                                                    {previewImages.length} image{previewImages.length !== 1 ? 's' : ''} selected
+                                                </span>
+                                                {previewImages.length >= 5 && (
+                                                    <span className="text-xs text-gray-500 ml-2">
+                                                        (Maximum reached)
+                                                    </span>
+                                                )}
+                                            </p>
+                                            
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                {previewImages.map((url, idx) => (
+                                                    <div key={idx} className="relative group">
+                                                        <img
+                                                            src={url}
+                                                            alt={`Preview ${idx + 1}`}
+                                                            className="h-32 w-full object-cover rounded-lg border border-gray-200"
+                                                        />
+                                                        {idx === 0 && (
+                                                            <span className="absolute top-1 left-1 bg-forest-green text-white text-xs px-2 py-1 rounded-full">
+                                                                Main Image
+                                                            </span>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeImage(idx)}
+                                                            className="absolute top-1 right-1 bg-coral-red text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
+                                                            Image {idx + 1}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                First image will be used as the main campaign image.
+                                            </p>
                                         </div>
                                     )}
+                                    
                                     {errors.images && (
                                         <p className="text-coral-red text-sm">
                                             {errors.images}
@@ -653,6 +742,8 @@ const CreateCampaign = () => {
                     </form>
                 </CardContent>
             </Card>
+            
+            <ToastContainer />
         </div>
     );
 };
