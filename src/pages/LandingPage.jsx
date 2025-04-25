@@ -35,135 +35,153 @@ const LandingPage = () => {
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
-      const fetchCampaigns = async () => {
-        try {
-          setIsLoading(true);
-          
-          const apiUrl = `${import.meta.env.VITE_API_URL}/campaigns`;
-          const queryParams = new URLSearchParams();
-          
-          if (selectedCategory !== 'All') {
-            queryParams.append('category', selectedCategory);
-          }
-          
-          if (searchQuery) {
-            queryParams.append('search', searchQuery);
-          }
-          
-          const fullUrl = `${apiUrl}?${queryParams.toString()}`;
-          
-          const response = await fetch(fullUrl);
-          
-          if (!response.ok) {
-            throw new Error('Failed to fetch campaigns');
-          }
-          
-          const data = await response.json();
-          
-          if (data.success) {
-            setFeaturedCampaigns(data.data);
-          } else {
-            const dummyCampaigns = [
-              {
-                _id: '1',
-                title: 'Clean Water Initiative',
-                description: 'Providing clean drinking water to communities in need through sustainable water filtration systems.',
-                imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
-                category: 'Environment',
-                goalAmount: 50000,
-                raisedAmount: 32500,
-                daysLeft: 15,
-                backers: 128,
-                createdAt: new Date('2023-12-15').toISOString(),
-              },
-              {
-                _id: '2',
-                title: 'Educational Scholarships for Underserved Youth',
-                description: 'Funding scholarships for talented students from low-income families to pursue higher education.',
-                imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b',
-                category: 'Education',
-                goalAmount: 75000,
-                raisedAmount: 45000,
-                daysLeft: 30,
-                backers: 210,
-                createdAt: new Date('2023-11-10').toISOString(),
-              },
-              {
-                _id: '3',
-                title: 'Community Health Clinic Expansion',
-                description: 'Expanding our local health clinic to serve more patients with improved facilities and equipment.',
-                imageUrl: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81',
-                category: 'Medical',
-                goalAmount: 100000,
-                raisedAmount: 87500,
-                daysLeft: 10,
-                backers: 312,
-                createdAt: new Date('2023-12-01').toISOString(),
-              },
-              {
-                _id: '4',
-                title: 'Tech Innovation Hub',
-                description: 'Creating a space for young innovators to develop solutions to local problems using technology.',
-                imageUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c',
-                category: 'Technology',
-                goalAmount: 120000,
-                raisedAmount: 60000,
-                daysLeft: 45,
-                backers: 175,
-                createdAt: new Date('2023-10-20').toISOString(),
-              },
-              {
-                _id: '5',
-                title: 'Sunset Haven: Elderly Care Facility',
-                description: 'Creating a comfortable and caring environment for seniors who need specialized attention and community.',
-                imageUrl: 'https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c',
-                category: 'Elderly Care',
-                goalAmount: 80000,
-                raisedAmount: 25000,
-                daysLeft: 40,
-                backers: 85,
-                createdAt: new Date('2023-11-28').toISOString(),
-              },
-              {
-                _id: '6',
-                title: 'Bright Futures: Child Welfare Center',
-                description: 'Supporting orphaned children with education, healthcare, and a loving community to help them thrive.',
-                imageUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c',
-                category: 'Child Welfare',
-                goalAmount: 60000,
-                raisedAmount: 30000,
-                daysLeft: 25,
-                backers: 120,
-                createdAt: new Date('2023-12-05').toISOString(),
-              },
-            ];
-            
-            setFeaturedCampaigns(dummyCampaigns);
-          }
-          
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching campaigns:', error);
-          toast({
-            title: "Error loading campaigns",
-            description: "We couldn't load the campaigns at this time. Please try again later.",
-            variant: "destructive"
-          });
-          
-          // Use dummy data on error
-          const dummyCampaigns = [
-            // ... keep existing code (dummy campaign data)
-          ];
-          
-          setFeaturedCampaigns(dummyCampaigns);
-          setIsLoading(false);
-        }
-      };
-      
-      fetchCampaigns();
+        // Check if user is authenticated (you might want to use your actual auth check)
+        const token = localStorage.getItem("token");
+        setIsAuthenticated(!!token);
+
+        const fetchCampaigns = async () => {
+            try {
+                setIsLoading(true);
+
+                const apiUrl = `${import.meta.env.VITE_API_URL}/campaigns`;
+                const queryParams = new URLSearchParams();
+
+                if (selectedCategory !== "All") {
+                    queryParams.append("category", selectedCategory);
+                }
+
+                if (searchQuery) {
+                    queryParams.append("search", searchQuery);
+                }
+
+                const fullUrl = `${apiUrl}?${queryParams.toString()}`;
+
+                const response = await fetch(fullUrl);
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch campaigns");
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setFeaturedCampaigns(data.data);
+                } else {
+                    const dummyCampaigns = [
+                        {
+                            _id: "1",
+                            title: "Clean Water Initiative",
+                            description:
+                                "Providing clean drinking water to communities in need through sustainable water filtration systems.",
+                            imageUrl:
+                                "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+                            category: "Environment",
+                            goalAmount: 50000,
+                            raisedAmount: 32500,
+                            daysLeft: 15,
+                            backers: 128,
+                            createdAt: new Date("2023-12-15").toISOString(),
+                        },
+                        {
+                            _id: "2",
+                            title: "Educational Scholarships for Underserved Youth",
+                            description:
+                                "Funding scholarships for talented students from low-income families to pursue higher education.",
+                            imageUrl:
+                                "https://images.unsplash.com/photo-1501854140801-50d01698950b",
+                            category: "Education",
+                            goalAmount: 75000,
+                            raisedAmount: 45000,
+                            daysLeft: 30,
+                            backers: 210,
+                            createdAt: new Date("2023-11-10").toISOString(),
+                        },
+                        {
+                            _id: "3",
+                            title: "Community Health Clinic Expansion",
+                            description:
+                                "Expanding our local health clinic to serve more patients with improved facilities and equipment.",
+                            imageUrl:
+                                "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
+                            category: "Medical",
+                            goalAmount: 100000,
+                            raisedAmount: 87500,
+                            daysLeft: 10,
+                            backers: 312,
+                            createdAt: new Date("2023-12-01").toISOString(),
+                        },
+                        {
+                            _id: "4",
+                            title: "Tech Innovation Hub",
+                            description:
+                                "Creating a space for young innovators to develop solutions to local problems using technology.",
+                            imageUrl:
+                                "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
+                            category: "Technology",
+                            goalAmount: 120000,
+                            raisedAmount: 60000,
+                            daysLeft: 45,
+                            backers: 175,
+                            createdAt: new Date("2023-10-20").toISOString(),
+                        },
+                        {
+                            _id: "5",
+                            title: "Sunset Haven: Elderly Care Facility",
+                            description:
+                                "Creating a comfortable and caring environment for seniors who need specialized attention and community.",
+                            imageUrl:
+                                "https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c",
+                            category: "Elderly Care",
+                            goalAmount: 80000,
+                            raisedAmount: 25000,
+                            daysLeft: 40,
+                            backers: 85,
+                            createdAt: new Date("2023-11-28").toISOString(),
+                        },
+                        {
+                            _id: "6",
+                            title: "Bright Futures: Child Welfare Center",
+                            description:
+                                "Supporting orphaned children with education, healthcare, and a loving community to help them thrive.",
+                            imageUrl:
+                                "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c",
+                            category: "Child Welfare",
+                            goalAmount: 60000,
+                            raisedAmount: 30000,
+                            daysLeft: 25,
+                            backers: 120,
+                            createdAt: new Date("2023-12-05").toISOString(),
+                        },
+                    ];
+
+                    setFeaturedCampaigns(dummyCampaigns);
+                }
+
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Error fetching campaigns:", error);
+                toast({
+                    title: "Error loading campaigns",
+                    description:
+                        "We couldn't load the campaigns at this time. Please try again later.",
+                    variant: "destructive",
+                });
+
+                // Use dummy data on error
+                const dummyCampaigns = [
+                    // ... keep existing code (dummy campaign data)
+                ];
+
+                setFeaturedCampaigns(dummyCampaigns);
+                setIsLoading(false);
+            }
+        };
+
+        fetchCampaigns();
     }, [selectedCategory, searchQuery, toast]);
 
     const filteredCampaigns = featuredCampaigns.filter((campaign) => {
@@ -609,39 +627,41 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-16 bg-forest-green text-soft-white">
-                <div className="container mx-auto px-6">
-                    <div className="max-w-3xl mx-auto text-center animate-fade-in">
-                        <h2 className="text-3xl font-bold mb-6">
-                            Ready to Make a Difference?
-                        </h2>
-                        <p className="text-xl mb-10">
-                            Join our community of changemakers and start your
-                            journey today.
-                        </p>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4">
-                            <Link to="/register">
-                                <Button
-                                    size="lg"
-                                    className="bg-mint-green text-forest-green hover:bg-lime-green px-6 py-3 rounded-full"
-                                >
-                                    Create Account
-                                </Button>
-                            </Link>
-                            <Link to="/login">
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    className="border-soft-white text-soft-white hover:bg-mint-green/20 px-6 py-3 rounded-full"
-                                >
-                                    Login
-                                </Button>
-                            </Link>
+            {/* CTA Section - Only shown to non-authenticated users */}
+            {!isAuthenticated && (
+                <section className="py-16 bg-forest-green text-soft-white">
+                    <div className="container mx-auto px-6">
+                        <div className="max-w-3xl mx-auto text-center animate-fade-in">
+                            <h2 className="text-3xl font-bold mb-6">
+                                Ready to Make a Difference?
+                            </h2>
+                            <p className="text-xl mb-10">
+                                Join our community of changemakers and start
+                                your journey today.
+                            </p>
+                            <div className="flex flex-col sm:flex-row justify-center gap-4">
+                                <Link to="/register">
+                                    <Button
+                                        size="lg"
+                                        className="bg-mint-green text-forest-green hover:bg-lime-green px-6 py-3 rounded-full"
+                                    >
+                                        Create Account
+                                    </Button>
+                                </Link>
+                                <Link to="/login">
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="border-soft-white text-soft-white hover:bg-mint-green/20 px-6 py-3 rounded-full"
+                                    >
+                                        Login
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             <Footer />
         </>

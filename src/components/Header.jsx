@@ -74,7 +74,7 @@ const Header = () => {
                         {[
                             { label: "Home", path: "/" },
                             { label: "Campaigns", path: "/campaigns" },
-                            { label: "How It Works", path: "/how-it-works" },
+                            // { label: "How It Works", path: "/how-it-works" },
                         ].map(({ label, path }) => (
                             <Link
                                 key={label}
