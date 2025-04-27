@@ -20,6 +20,7 @@ import {
     User2,
 } from "lucide-react";
 import EmergencyCampaigns from "./user/EmergencyCampaigns";
+import Chatbot from "./Chatbot";
 
 const LandingPage = () => {
     const [featuredCampaigns, setFeaturedCampaigns] = useState([]);
@@ -208,6 +209,7 @@ const LandingPage = () => {
     return (
         <>
             <Header />
+            <Chatbot />
 
             {/* Hero Section */}
             <section className="bg-forest-green text-soft-white pt-28 pb-20 md:pt-40 md:pb-32">
