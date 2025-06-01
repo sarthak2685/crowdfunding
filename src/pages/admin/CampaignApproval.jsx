@@ -20,6 +20,11 @@ import {
     AlertTriangle,
     Clock,
     Loader2,
+      Target,
+       Tags,
+         CalendarClock,
+  CalendarDays,
+  User
 } from "lucide-react";
 import {
     Dialog,
@@ -43,6 +48,7 @@ const CampaignApproval = () => {
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
     const [rejectionReason, setRejectionReason] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isEmergency, setIsEmergency] = useState(false);
 
     useEffect(() => {
         const fetchCampaigns = async () => {
@@ -110,11 +116,13 @@ const CampaignApproval = () => {
         setIsViewDialogOpen(true);
     };
 
-    const handleApproveCampaign = (campaign) => {
-        console.log("Campaign Clicked", campaign);
-        setSelectedCampaign(campaign);
-        setIsApproveDialogOpen(true);
-    };
+// const handleApproveCampaign = (campaign) => {
+//   console.log("Campaign Clicked", campaign);
+//   setSelectedCampaign(campaign);
+//   setIsEmergency(campaign?.isEmergency || false); // Default to false if not set
+//   setIsApproveDialogOpen(true);
+// };
+
 
     const handleRejectCampaign = (campaign) => {
         setSelectedCampaign(campaign);
@@ -122,55 +130,63 @@ const CampaignApproval = () => {
         setIsRejectDialogOpen(true);
     };
 
+   const handleApproveCampaign = (campaign) => {
+        setSelectedCampaign(campaign);
+        setIsEmergency(campaign.isEmergency || false); // Initialize emergency status
+        setIsApproveDialogOpen(true);
+    };
+
     const confirmApproval = async () => {
         try {
-          setIsProcessing(true);
-      
-          const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/admin/campaigns/${selectedCampaign._id}/approve`,
-            {
-              method: 'PUT',
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json',
-              },
+            setIsProcessing(true);
+            
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/admin/campaigns/${selectedCampaign._id}/approve`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ isEmergency: true }), // Send emergency status
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to approve campaign');
             }
-          );
-      
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to approve campaign');
-          }
-      
-          // Update campaigns state
-          setCampaigns((prevCampaigns) =>
-            prevCampaigns.map((campaign) =>
-              campaign._id === selectedCampaign._id
-                ? { ...campaign, status: 'active' }
-                : campaign
-            )
-          );
-      
-          setIsApproveDialogOpen(false);
-          setSelectedCampaign(null);
-      
-          toast({
-            title: 'Campaign approved',
-            description: 'The campaign has been approved and is now live.',
-            duration: 3000,
-          });
+
+            // Update local state with emergency status
+            setCampaigns((prevCampaigns) =>
+                prevCampaigns.map((campaign) =>
+                    campaign._id === selectedCampaign._id
+                        ? { ...campaign, status: 'active', isEmergency }
+                        : campaign
+                )
+            );
+
+            setIsApproveDialogOpen(false);
+            setSelectedCampaign(null);
+            setIsEmergency(false);
+
+            toast({
+                title: 'Campaign approved',
+                description: `The campaign has been approved and marked as ${isEmergency ? 'EMERGENCY' : 'regular'}.`,
+                duration: 3000,
+            });
         } catch (error) {
-          console.error('Error approving campaign:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Approval failed',
-            description: error.message || 'There was an error approving the campaign.',
-            duration: 5000,
-          });
+            console.error('Error approving campaign:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Approval failed',
+                description: error.message || 'There was an error approving the campaign.',
+                duration: 5000,
+            });
         } finally {
-          setIsProcessing(false);
+            setIsProcessing(false);
         }
-      };
+    };
       
 
       const confirmRejection = async () => {
@@ -236,107 +252,113 @@ const CampaignApproval = () => {
       };
       
 
-    const renderCampaignCards = (campaignsToRender) => {
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
-                {campaignsToRender.map((campaign) => (
-                    <Card key={campaign._id} className="overflow-hidden">
-                        <div className="h-40 sm:h-48 overflow-hidden">
-  <img
-    src={(campaign.imageUrl && campaign.imageUrl[0]) || "/placeholder.svg"}
-    alt={campaign.title}
-    className="w-full h-full object-cover"
-  />
-</div>
+const renderCampaignCards = (campaignsToRender) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+      {campaignsToRender.map((campaign) => (
+        <Card key={campaign._id} className="overflow-hidden">
+          <div className="h-40 sm:h-48 overflow-hidden">
+            <img
+              src={(campaign.imageUrl && campaign.imageUrl[0]) || "/placeholder.svg"}
+              alt={campaign.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-                        <CardContent className="p-4 sm:p-6">
-                            <div className="flex justify-between items-start mb-3 sm:mb-4">
-                                <h3 className="font-semibold text-base sm:text-lg line-clamp-1">
-                                    {campaign.title}
-                                </h3>
-                                {getStatusBadge(campaign.status)}
-                            </div>
-
-                            <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
-                                {campaign.description}
-                            </p>
-
-                            <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4 text-xs sm:text-sm">
-                                <div className="bg-gray-100 px-2 py-1 rounded-md">
-                                    <span className="font-medium">Goal:</span> Rs.
-                                    {campaign.goalAmount.toLocaleString()}
-                                </div>
-                                <div className="bg-gray-100 px-2 py-1 rounded-md">
-                                    <span className="font-medium">Category:</span>{" "}
-                                    {campaign.category}
-                                </div>
-                                <div className="bg-gray-100 px-2 py-1 rounded-md">
-                                    <span className="font-medium">Duration:</span>{" "}
-                                    {campaign.duration} days
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
-                                <div className="mb-1 sm:mb-0">
-                                    <span className="font-medium">By:</span>{" "}
-                                    {campaign.creator.name}
-                                </div>
-                                <div>
-                                    <span className="font-medium">Submitted:</span>{" "}
-                                    {format(new Date(campaign.createdAt), "MMM d, yyyy")}
-                                </div>
-                            </div>
-
-                            {campaign.status === "rejected" && (
-                                <div className="bg-red-50 border border-red-100 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">
-                                    <p className="text-red-700 text-xs sm:text-sm font-medium mb-1">
-                                        Rejection Reason:
-                                    </p>
-                                    <p className="text-red-600 text-xs sm:text-sm">
-                                        {campaign.rejectionReason}
-                                    </p>
-                                </div>
-                            )}
-
-                            <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 sm:mt-4">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex flex-wrap rounded-full px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm"
-                                    onClick={() => handleViewCampaign(campaign)}
-                                >
-                                    <Eye size={14} className="mr-1" /> View
-                                </Button>
-
-                                {campaign.status === "pending" && (
-                                    <>
-                                        <Button
-                                            variant="default"
-                                            size="sm"
-                                            className="flex flex-wrap rounded-full px-3 sm:px-4 py-1 sm:py-2 bg-forest-green/20 hover:bg-forest-green font-semibold text-forest-green hover:text-white text-xs sm:text-sm"
-                                            onClick={() => handleApproveCampaign(campaign)}
-                                        >
-                                            <CheckCircle2 size={14} className="mr-1" />{" "}
-                                            Approve
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            className="flex flex-wrap rounded-full px-3 sm:px-4 py-1 sm:py-2 text-coral-red bg-coral-red/10 hover:bg-coral-red hover:text-white text-xs sm:text-sm"
-                                            onClick={() => handleRejectCampaign(campaign)}
-                                        >
-                                            <XCircle size={14} className="mr-1" />{" "}
-                                            Reject
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex justify-between items-start mb-3 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-base sm:text-lg line-clamp-1">
+                  {campaign.title}
+                </h3>
+                {campaign.isEmergency && (
+                  <Badge className="px-2 py-1 text-xs bg-red-600 text-white flex items-center gap-1 rounded-full">
+                    <AlertTriangle size={12} className="text-white" />
+                    Emergency
+                  </Badge>
+                )}
+              </div>
+              {getStatusBadge(campaign.status)}
             </div>
-        );
-    };
+
+            <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
+              {campaign.description}
+            </p>
+
+            <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4 text-xs sm:text-sm">
+              <div className="bg-gray-100 px-2 py-1 rounded-md">
+                <span className="font-medium">Goal:</span> Rs.
+                {campaign.goalAmount.toLocaleString()}
+              </div>
+              <div className="bg-gray-100 px-2 py-1 rounded-md">
+                <span className="font-medium">Category:</span>{" "}
+                {campaign.category}
+              </div>
+              <div className="bg-gray-100 px-2 py-1 rounded-md">
+                <span className="font-medium">Duration:</span>{" "}
+                {campaign.duration} days
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
+              <div className="mb-1 sm:mb-0">
+                <span className="font-medium">By:</span>{" "}
+                {campaign.creator.name}
+              </div>
+              <div>
+                <span className="font-medium">Submitted:</span>{" "}
+                {format(new Date(campaign.createdAt), "MMM d, yyyy")}
+              </div>
+            </div>
+
+            {campaign.status === "rejected" && (
+              <div className="bg-red-50 border border-red-100 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">
+                <p className="text-red-700 text-xs sm:text-sm font-medium mb-1">
+                  Rejection Reason:
+                </p>
+                <p className="text-red-600 text-xs sm:text-sm">
+                  {campaign.rejectionReason}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 sm:mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex flex-wrap rounded-full px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm"
+                onClick={() => handleViewCampaign(campaign)}
+              >
+                <Eye size={14} className="mr-1" /> View
+              </Button>
+
+              {campaign.status === "pending" && (
+                <>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex flex-wrap rounded-full px-3 sm:px-4 py-1 sm:py-2 bg-forest-green/20 hover:bg-forest-green font-semibold text-forest-green hover:text-white text-xs sm:text-sm"
+                    onClick={() => handleApproveCampaign(campaign)}
+                  >
+                    <CheckCircle2 size={14} className="mr-1" /> Approve
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex flex-wrap rounded-full px-3 sm:px-4 py-1 sm:py-2 text-coral-red bg-coral-red/10 hover:bg-coral-red hover:text-white text-xs sm:text-sm"
+                    onClick={() => handleRejectCampaign(campaign)}
+                  >
+                    <XCircle size={14} className="mr-1" /> Reject
+                  </Button>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
 
     return (
         <div className="px-2 sm:px-4 lg:px-6 py-4">
@@ -732,46 +754,66 @@ const CampaignApproval = () => {
 
 
             {/* Approve Campaign Dialog */}
-            {isApproveDialogOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-4 sm:p-6">
-      <h2 className="text-lg font-semibold mb-2">Approve Campaign</h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Are you sure you want to approve this campaign? Once approved, it will be visible to all users.
-      </p>
+    {isApproveDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-4 sm:p-6">
+                <h2 className="text-lg font-semibold mb-2">Approve Campaign</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                    Are you sure you want to approve this campaign? Once approved, it will be visible to all users.
+                </p>
 
-      <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
-        <h3 className="font-semibold text-green-800 text-sm">
-          {selectedCampaign?.title}
-        </h3>
-        <p className="text-green-700 text-xs">by {selectedCampaign?.creator?.name}</p>
-      </div>
+                <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+                    <h3 className="font-semibold text-green-800 text-sm">
+                        {selectedCampaign?.title}
+                    </h3>
+                    <p className="text-green-700 text-xs">by {selectedCampaign?.creator?.name}</p>
+                </div>
 
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={() => setIsApproveDialogOpen(false)}
-          className="text-sm px-3 py-1 border rounded text-gray-700 hover:bg-gray-100"
-          disabled={isProcessing}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={confirmApproval}
-          disabled={isProcessing}
-          className="text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
-        >
-          {isProcessing && (
-            <svg className="animate-spin mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-          )}
-          {isProcessing ? 'Processing...' : 'Confirm Approval'}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                {/* Emergency Toggle Section */}
+                <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                    <input
+                        type="checkbox"
+                        id="emergencyToggle"
+                        checked={isEmergency}
+                        onChange={(e) => setIsEmergency(e.target.checked)}
+                        className="h-5 w-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                    />
+                    <div>
+                        <label htmlFor="emergencyToggle" className="block text-sm font-medium text-gray-700">
+                            Emergency Campaign
+                        </label>
+                        <p className="text-xs text-gray-500">
+                            Enabling this will prioritize this campaign in emergency listings
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                    <button
+                        onClick={() => {
+                            setIsApproveDialogOpen(false);
+                            setIsEmergency(false);
+                        }}
+                        className="text-sm px-3 py-1 border rounded text-gray-700 hover:bg-gray-100"
+                        disabled={isProcessing}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={confirmApproval}
+                        disabled={isProcessing}
+                        className="text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
+                    >
+                        {isProcessing && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        {isProcessing ? 'Processing...' : 'Confirm Approval'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
+
 
 
           {/* Reject Campaign Dialog */}
