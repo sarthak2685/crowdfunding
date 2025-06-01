@@ -29,7 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const CreateCampaign = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const { toast } = useToast();
+    const { toast: shadcnToast } = useToast();
 
     const initialFormState = {
         title: "",
@@ -92,13 +92,11 @@ const CreateCampaign = () => {
     const handleImagesChange = (e) => {
         const files = Array.from(e.target.files);
         
-        // Validate maximum 5 images
         if (files.length + formData.images.length > 5) {
             toast.error("You can upload maximum 5 images");
             return;
         }
         
-        // Validate file types
         const validTypes = ["image/jpeg", "image/png", "image/jpg"];
         const invalidFiles = files.filter(file => !validTypes.includes(file.type));
         
@@ -107,8 +105,7 @@ const CreateCampaign = () => {
             return;
         }
         
-        // Validate file sizes (5MB max)
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 5 * 1024 * 1024;
         const oversizedFiles = files.filter(file => file.size > maxSize);
         
         if (oversizedFiles.length > 0) {
@@ -121,7 +118,6 @@ const CreateCampaign = () => {
             images: [...formData.images, ...files].slice(0, 5),
         });
         
-        // Create preview URLs for new files only
         const newPreviewUrls = files.map(file => URL.createObjectURL(file));
         setPreviewImages([...previewImages, ...newPreviewUrls].slice(0, 5));
     };
@@ -135,7 +131,6 @@ const CreateCampaign = () => {
         });
 
         const newPreviews = [...previewImages];
-        // Revoke the object URL before removing
         URL.revokeObjectURL(newPreviews[index]);
         newPreviews.splice(index, 1);
         setPreviewImages(newPreviews);
@@ -148,7 +143,6 @@ const CreateCampaign = () => {
             videos: files,
         });
         
-        // Revoke previous video URLs
         previewVideos.forEach(url => URL.revokeObjectURL(url));
         setPreviewVideos(files.map((file) => URL.createObjectURL(file)));
     };
@@ -201,7 +195,6 @@ const CreateCampaign = () => {
     };
 
     const resetForm = () => {
-        // Revoke all object URLs
         previewImages.forEach(url => URL.revokeObjectURL(url));
         previewVideos.forEach(url => URL.revokeObjectURL(url));
         
@@ -222,8 +215,6 @@ const CreateCampaign = () => {
     
         try {
             const formDataToSend = new FormData();
-    
-            // Append text fields
             formDataToSend.append("title", formData.title);
             formDataToSend.append("description", formData.description);
             formDataToSend.append("story", formData.story);
@@ -231,23 +222,19 @@ const CreateCampaign = () => {
             formDataToSend.append("goalAmount", formData.goalAmount);
             formDataToSend.append("duration", formData.duration);
     
-            // Handle images
             if (formData.images.length > 0) {
                 formDataToSend.append("images", formData.images[0]);
-                const additionalImages = formData.images.slice(1);
-                additionalImages.forEach((file) => {
+                formData.images.slice(1).forEach((file) => {
                     formDataToSend.append("images", file);
                 });
             }
     
-            // Append videos
             if (formData.videos.length > 0) {
                 formData.videos.forEach((file) => {
                     formDataToSend.append("videos", file);
                 });
             }
     
-            // Append documents
             if (formData.documents.length > 0) {
                 formData.documents.forEach((file) => {
                     formDataToSend.append("verificationDocument", file);
@@ -277,23 +264,10 @@ const CreateCampaign = () => {
                     pauseOnHover: true,
                     draggable: true,
                     progress: undefined,
-                    style: {
-                        backgroundColor: "#16a34a",
-                        color: "white",
-                        boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
-                        border: "none",
-                        width: "100%",
-                        maxWidth: "400px",
-                    },
+                    theme: "colored",
                 });
                 
-                // Reset the form
                 resetForm();
-                
-                // Navigate after a short delay
-                setTimeout(() => {
-                    navigate("/dashboard");
-                }, 2000);
             } else {
                 throw new Error(result.message || "Something went wrong");
             }
@@ -307,14 +281,7 @@ const CreateCampaign = () => {
                 pauseOnHover: true,
                 draggable: true,
                 progress: undefined,
-                style: {
-                    backgroundColor: "#dc2626",
-                    color: "white",
-                    boxShadow: "0 10px 15px rgba(0,0,0,0.3)",
-                    border: "none",
-                    width: "100%",
-                    maxWidth: "400px",
-                },
+                theme: "colored",
             });
         } finally {
             setIsSubmitting(false);
@@ -344,10 +311,7 @@ const CreateCampaign = () => {
                         <div className="grid gap-6">
                             {/* Title */}
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="title"
-                                    className="text-charcoal"
-                                >
+                                <Label htmlFor="title" className="text-charcoal">
                                     Campaign Title
                                 </Label>
                                 <Input
@@ -369,10 +333,7 @@ const CreateCampaign = () => {
 
                             {/* Description */}
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="description"
-                                    className="text-charcoal"
-                                >
+                                <Label htmlFor="description" className="text-charcoal">
                                     Short Description
                                 </Label>
                                 <Textarea
@@ -381,33 +342,21 @@ const CreateCampaign = () => {
                                     value={formData.description}
                                     onChange={handleChange}
                                     className={`focus:border-deep-emerald ${
-                                        errors.description
-                                            ? "border-coral-red"
-                                            : ""
+                                        errors.description ? "border-coral-red" : ""
                                     }`}
                                     placeholder="Provide a brief description (max 500 characters)"
                                     rows={3}
                                 />
                                 <div className="flex justify-between">
-                                    <p
-                                        className={
-                                            errors.description
-                                                ? "text-coral-red text-sm"
-                                                : "text-charcoal text-sm"
-                                        }
-                                    >
-                                        {errors.description ||
-                                            `${formData.description.length}/500 characters`}
+                                    <p className={errors.description ? "text-coral-red text-sm" : "text-charcoal text-sm"}>
+                                        {errors.description || `${formData.description.length}/500 characters`}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Full Story */}
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="story"
-                                    className="text-charcoal"
-                                >
+                                <Label htmlFor="story" className="text-charcoal">
                                     Full Story
                                 </Label>
                                 <Textarea
@@ -431,36 +380,21 @@ const CreateCampaign = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Category */}
                                 <div className="space-y-1.5">
-                                    <Label
-                                        htmlFor="category"
-                                        className="text-charcoal font-medium"
-                                    >
+                                    <Label htmlFor="category" className="text-charcoal font-medium">
                                         Category
                                     </Label>
                                     <Select
                                         value={formData.category}
-                                        onValueChange={(value) =>
-                                            handleSelectChange(
-                                                "category",
-                                                value
-                                            )
-                                        }
+                                        onValueChange={(value) => handleSelectChange("category", value)}
                                     >
                                         <SelectTrigger
                                             className={`w-full rounded-full border px-4 py-2 text-sm shadow-sm bg-white text-charcoal focus:outline-none focus:ring-2 focus:ring-deep-emerald ${
-                                                errors.category
-                                                    ? "border-coral-red"
-                                                    : "border-mint-green"
+                                                errors.category ? "border-coral-red" : "border-mint-green"
                                             }`}
                                         >
                                             <SelectValue placeholder="Select a category" />
                                         </SelectTrigger>
-
-                                        <SelectContent
-                                            className="bg-white rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"
-                                            side="bottom"
-                                            align="start"
-                                        >
+                                        <SelectContent className="bg-white rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
                                             {categories.map((category) => (
                                                 <SelectItem
                                                     key={category}
@@ -472,7 +406,6 @@ const CreateCampaign = () => {
                                             ))}
                                         </SelectContent>
                                     </Select>
-
                                     {errors.category && (
                                         <p className="text-sm text-coral-red font-medium">
                                             {errors.category}
@@ -482,10 +415,7 @@ const CreateCampaign = () => {
 
                                 {/* Goal Amount */}
                                 <div className="space-y-2">
-                                    <Label
-                                        htmlFor="goalAmount"
-                                        className="text-charcoal"
-                                    >
+                                    <Label htmlFor="goalAmount" className="text-charcoal">
                                         Goal Amount (₹)
                                     </Label>
                                     <Input
@@ -495,9 +425,7 @@ const CreateCampaign = () => {
                                         value={formData.goalAmount}
                                         onChange={handleChange}
                                         className={`focus:border-deep-emerald ${
-                                            errors.goalAmount
-                                                ? "border-coral-red"
-                                                : ""
+                                            errors.goalAmount ? "border-coral-red" : ""
                                         }`}
                                         placeholder="Enter your fundraising target"
                                         min="1"
@@ -512,10 +440,7 @@ const CreateCampaign = () => {
 
                             {/* Duration */}
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="duration"
-                                    className="text-charcoal"
-                                >
+                                <Label htmlFor="duration" className="text-charcoal">
                                     Campaign Duration (days)
                                 </Label>
                                 <Input
@@ -525,9 +450,7 @@ const CreateCampaign = () => {
                                     value={formData.duration}
                                     onChange={handleChange}
                                     className={`focus:border-deep-emerald ${
-                                        errors.duration
-                                            ? "border-coral-red"
-                                            : ""
+                                        errors.duration ? "border-coral-red" : ""
                                     }`}
                                     placeholder="How many days will your campaign run?"
                                     min="1"
@@ -544,23 +467,14 @@ const CreateCampaign = () => {
                             <div className="space-y-6">
                                 {/* Multiple Images Upload */}
                                 <div className="space-y-2">
-                                    <Label
-                                        htmlFor="images"
-                                        className="text-charcoal"
-                                    >
+                                    <Label htmlFor="images" className="text-charcoal">
                                         Campaign Images (First image will be main image)
                                     </Label>
                                     <div
                                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-soft-white transition-colors ${
-                                            errors.images
-                                                ? "border-coral-red"
-                                                : "border-mint-green"
+                                            errors.images ? "border-coral-red" : "border-mint-green"
                                         }`}
-                                        onClick={() =>
-                                            document
-                                                .getElementById("images")
-                                                .click()
-                                        }
+                                        onClick={() => document.getElementById("images").click()}
                                     >
                                         <input
                                             id="images"
@@ -636,10 +550,7 @@ const CreateCampaign = () => {
 
                                 {/* Multiple Video Upload */}
                                 <div className="space-y-2">
-                                    <Label
-                                        htmlFor="videos"
-                                        className="text-charcoal"
-                                    >
+                                    <Label htmlFor="videos" className="text-charcoal">
                                         Campaign Videos
                                     </Label>
                                     <input
@@ -672,10 +583,7 @@ const CreateCampaign = () => {
 
                                 {/* Multiple Document Upload */}
                                 <div className="space-y-2">
-                                    <Label
-                                        htmlFor="documents"
-                                        className="text-charcoal"
-                                    >
+                                    <Label htmlFor="documents" className="text-charcoal">
                                         Verification Documents (PDF, DOCX)
                                     </Label>
                                     <input
@@ -689,13 +597,11 @@ const CreateCampaign = () => {
                                     />
                                     {uploadedDocuments?.length > 0 && (
                                         <ul className="list-disc list-inside text-sm mt-2">
-                                            {uploadedDocuments.map(
-                                                (file, idx) => (
-                                                    <li key={idx}>
-                                                        {file.name}
-                                                    </li>
-                                                )
-                                            )}
+                                            {uploadedDocuments.map((file, idx) => (
+                                                <li key={idx}>
+                                                    {file.name}
+                                                </li>
+                                            ))}
                                         </ul>
                                     )}
                                     {errors.documents && (
@@ -734,9 +640,7 @@ const CreateCampaign = () => {
                                 className="bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full"
                                 disabled={isSubmitting}
                             >
-                                {isSubmitting
-                                    ? "Submitting..."
-                                    : "Create Campaign"}
+                                {isSubmitting ? "Submitting..." : "Create Campaign"}
                             </Button>
                         </CardFooter>
                     </form>
