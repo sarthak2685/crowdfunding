@@ -72,22 +72,26 @@ const Header = () => {
                     {/* Desktop Nav */}
                     <nav className="hidden md:flex items-center space-x-6">
                         {[
-                            { label: "Home", path: "/" },
-                            { label: "Campaigns", path: "/campaigns" },
-                            { label: "How It Works", path: "/how-it-works" },
-                        ].map(({ label, path }) => (
-                            <Link
-                                key={label}
-                                to={path}
-                                className={`px-3 py-2 rounded-full transition ${
-                                    scrolled
-                                        ? "text-charcoal hover:bg-mint-green/20 hover:text-deep-emerald"
-                                        : "text-soft-white hover:bg-mint-green/20 hover:text-mint-green"
-                                }`}
-                            >
-                                {label}
-                            </Link>
-                        ))}
+  { label: "Home", id: "home" },
+  { label: "Campaigns", id: "campaigns" },
+  { label: "How It Works", id: "how-it-works" },
+].map(({ label, id }) => (
+  <a
+    key={label}
+    href={`#${id}`}
+    className={`px-3 py-2 rounded-full transition ${
+      scrolled
+        ? "text-charcoal hover:bg-mint-green/20 hover:text-deep-emerald"
+        : "text-soft-white hover:bg-mint-green/20 hover:text-mint-green"
+    }`}
+    onClick={(e) => {
+      e.preventDefault();
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }}
+  >
+    {label}
+  </a>
+))}
 
                         {currentUser ? (
                             <>
@@ -188,20 +192,25 @@ const Header = () => {
             {mobileMenuOpen && (
                 <div className="fixed inset-0 z-40 bg-soft-white pt-20 px-6">
                     <nav className="flex flex-col space-y-4">
-                        {["Home", "Campaigns", "How It Works"].map(
-                            (label, i) => (
-                                <Link
-                                    key={i}
-                                    to={`/${label
-                                        .toLowerCase()
-                                        .replace(/ /g, "-")}`}
-                                    className="px-4 py-3 rounded-full text-charcoal hover:bg-mint-green/20 hover:text-forest-green text-lg"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    {label}
-                                </Link>
-                            )
-                        )}
+                        {["Home", "Campaigns", "How It Works"].map((label) => {
+    const id = label.toLowerCase().replace(/ /g, "-");
+    return (
+        <a
+            key={id}
+            href={`#${id}`}
+            className="px-4 py-3 rounded-full text-charcoal hover:bg-mint-green/20 hover:text-forest-green text-lg"
+            onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(id)?.scrollIntoView({ 
+                    behavior: "smooth" 
+                });
+                setMobileMenuOpen(false);
+            }}
+        >
+            {label}
+        </a>
+    );
+})}
 
                         <div className="pt-6 border-t border-mint-green">
                             {currentUser ? (
