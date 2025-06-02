@@ -23,7 +23,10 @@ const EmergencyCampaigns = () => {
         const data = await response.json();
 
         if (response.ok) {
-          setEmergencyCampaigns(data.data || []);
+            const filteredCampaigns = data.data.filter(
+          (campaign) => campaign.isEmergency && campaign.status === "active"
+        );
+        setEmergencyCampaigns(filteredCampaigns);
         } else {
           toast({
             variant: "destructive",
