@@ -304,6 +304,17 @@ const CampaignApproval = () => {
                                     {format(new Date(campaign.createdAt), "MMM d, yyyy")}
                                 </div>
                             </div>
+                            <div>
+                                <p className="text-sm text-red-700">Risk Level: <span className="text-black">{campaign.fraudAnalysis?.riskLevel}</span></p>
+                                <p className="text-xs text-green-500 mb-2">Recommendation: <span className="text-gray-500">{campaign.fraudAnalysis?.recommendation}</span></p>
+                                {campaign.fraudAnalysis?.indicators.map((indicator, index) => (
+                                <div key={index} className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+                                    <span className="font-semibold ">{indicator.type}:</span>
+                                    <span>{indicator.severity}<span className="text-black font-semibold">({indicator.description})</span></span>
+                                </div>
+                                ))}
+
+                            </div>
 
                             {campaign.status === "rejected" && (
                                 <div className="bg-red-50 border border-red-100 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">

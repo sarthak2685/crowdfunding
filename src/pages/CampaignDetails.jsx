@@ -579,11 +579,11 @@ const CampaignDetails = () => {
                         </p>
 
                         <div className="flex items-center mb-8">
-                            <img
+                            {/* <img
                                 src={getProfileImage(campaign.creator.profilePic)}
                                 alt={campaign.creator.name}
                                 className="w-10 h-10 rounded-full mr-3 object-cover"
-                            />
+                            /> */}
                             <div>
                                 <p className="font-medium text-charcoal">
                                     Created by
@@ -854,13 +854,15 @@ const CampaignDetails = () => {
                                     </div>
 
                                     {/* Donation Button */}
+                                    <Link to="/">
                                     <Button
                                         className="flex flex-wrap w-full mb-4 bg-forest-green hover:bg-lime-green text-white px-4 py-2 rounded-full"
                                         onClick={handleDonateClick}
                                     >
-                                        <Heart className="mr-2 h-5 w-5" />
-                                        Back this project
+                                        {/* <Heart className="mr-2 h-5 w-5" /> */}
+                                        Home Page
                                     </Button>
+                                    </Link>
 
                                     <Button
                                         variant="outline"

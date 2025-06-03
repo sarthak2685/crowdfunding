@@ -645,7 +645,42 @@ const LandingPage = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-16 bg-forest-green text-soft-white">
+          {!isAuthenticated && (
+  <section className="py-16 bg-forest-green text-soft-white">
+    <div className="container mx-auto px-6">
+      <div className="max-w-3xl mx-auto text-center animate-fade-in">
+        <h2 className="text-3xl font-bold mb-6">
+          Ready to Make a Difference?
+        </h2>
+        <p className="text-xl mb-10">
+          Join our community of changemakers and start your journey today.
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <Link to="/register">
+            <Button
+              size="lg"
+              className="bg-mint-green text-forest-green hover:bg-lime-green px-6 py-3 rounded-full"
+            >
+              Create Account
+            </Button>
+          </Link>
+          <Link to="/login">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-soft-white text-soft-white hover:bg-mint-green/20 px-6 py-3 rounded-full"
+            >
+              Login
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+            
+            {/* <section className="py-16 bg-forest-green text-soft-white">
                 <div className="container mx-auto px-6">
                     <div className="max-w-3xl mx-auto text-center animate-fade-in">
                         <h2 className="text-3xl font-bold mb-6">
@@ -676,7 +711,7 @@ const LandingPage = () => {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             <Footer />
         </>
