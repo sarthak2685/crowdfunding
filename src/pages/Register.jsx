@@ -32,6 +32,9 @@ const Register = () => {
     };
 
     const validateForm = () => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^[0-9]{10,15}$/;
+
         if (
             !formData.name ||
             !formData.email ||
@@ -40,6 +43,16 @@ const Register = () => {
             !formData.phone
         ) {
             toast.error("All fields are required");
+            return false;
+        }
+
+        if (!emailRegex.test(formData.email)) {
+            toast.error("Please enter a valid email address");
+            return false;
+        }
+
+        if (!phoneRegex.test(formData.phone)) {
+            toast.error("Please enter a valid phone number (10-15 digits)");
             return false;
         }
 
@@ -171,7 +184,11 @@ const Register = () => {
                                     value={formData.phone}
                                     onChange={handleChange}
                                     className="mt-1 border-mint-green focus:border-deep-emerald"
+                                    placeholder="1234567890"
                                 />
+                                <p className="text-xs text-charcoal mt-1">
+                                    10-15 digits, numbers only
+                                </p>
                             </div>
 
                             <div>

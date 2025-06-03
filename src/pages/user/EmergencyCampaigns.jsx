@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Heart, Clock, X, CreditCard, Wallet, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 const EmergencyCampaigns = () => {
   // Campaign data state
@@ -25,6 +28,9 @@ const EmergencyCampaigns = () => {
     email: "",
     phone: ""
   });
+  const { currentUser } = useAuth();
+    const navigate = useNavigate();
+
 
   // Fetch emergency campaigns
   useEffect(() => {
@@ -99,11 +105,17 @@ const EmergencyCampaigns = () => {
   };
 
   // Handle donate button click
+ 
   const handleDonateClick = (campaign) => {
-    setSelectedCampaign(campaign);
+    if (!currentUser) {
+      toast({ title: "Login Required", description: "Please login to donate.", variant: "destructive" });
+      navigate(`/login`, { state: { from: `/campaign  ` } });
+      return;
+    }
+    
+  setSelectedCampaign(campaign);
     setIsPaymentModalOpen(true);
   };
-
   // Handle payment submission
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
@@ -292,13 +304,33 @@ const EmergencyCampaigns = () => {
                       <span>{campaign.backersCount || 0} supporters</span>
                     </div>
                   </div>
-                  
-                  <Button 
+                  <div className="mt-4 mb-3">
+            <Button
+              onClick={() => handleDonateClick(campaign)}
+              className={cn(
+                "w-full px-4 py-2 text-white rounded-full flex items-center justify-center bg-rose-600 hover:bg-rose-700 font-bold"
+              )}
+            >
+              <Heart className="w-4 h-4 mr-2" />
+              <span>
+                {status === "active"
+                  ? "Support Now!"
+                  : status === "pending"
+                    ? "Support Now!"
+                    : status === "completed"
+                      ? "Campaign Ended"
+                      : status === "rejected"
+                        ? "Not Accepting Donations"
+                        : "Support Now!"}
+              </span>
+            </Button>
+          </div>
+                  {/* <Button 
                     onClick={() => handleDonateClick(campaign)}
-                    className="w-full bg-rose-600 hover:bg-rose-700"
+                    className="w-full text-white bg-rose-600 hover:bg-rose-700"
                   >
-                    Donate Now
-                  </Button>
+                    Support Now!
+                  </Button> */}
                 </div>
               </Card>
             ))}
@@ -327,7 +359,7 @@ const EmergencyCampaigns = () => {
             </Button>
           </Link>
           <Link to="/dashboard/create-campaign">
-            <Button className="bg-rose-600 hover:bg-rose-700">
+            <Button className=" text-white bg-rose-600 hover:bg-rose-700">
               Start Emergency Campaign
             </Button>
           </Link>
