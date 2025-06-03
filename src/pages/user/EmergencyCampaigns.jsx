@@ -351,7 +351,7 @@ const EmergencyCampaigns = () => {
             
             <form onSubmit={handlePaymentSubmit} className="p-6">
               {/* Donor Information */}
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">YOUR INFORMATION</h4>
                 <div className="space-y-4">
                   <div>
@@ -402,7 +402,7 @@ const EmergencyCampaigns = () => {
                     />
                   </div>
                 </div>
-              </div>
+              </div> */}
               
               {/* Donation Amount */}
               <div className="mb-6">
