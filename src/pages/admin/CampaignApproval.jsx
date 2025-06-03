@@ -304,17 +304,31 @@ const CampaignApproval = () => {
                                     {format(new Date(campaign.createdAt), "MMM d, yyyy")}
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-sm text-red-700">Risk Level: <span className="text-black">{campaign.fraudAnalysis?.riskLevel}</span></p>
-                                <p className="text-xs text-green-500 mb-2">Recommendation: <span className="text-gray-500">{campaign.fraudAnalysis?.recommendation}</span></p>
-                                {campaign.fraudAnalysis?.indicators.map((indicator, index) => (
-                                <div key={index} className="flex items-center gap-1 text-xs text-gray-600 mb-2">
-                                    <span className="font-semibold ">{indicator.type}:</span>
-                                    <span>{indicator.severity}<span className="text-black font-semibold">({indicator.description})</span></span>
-                                </div>
-                                ))}
-
-                            </div>
+                   <div>
+    <div className="flex items-center gap-2 mb-1">
+        <p className="text-sm text-red-700">Risk Level: <span className="text-black">{campaign.fraudAnalysis?.riskLevel}</span></p>
+        <div className=" flex-1 max-w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+                className={`h-full ${
+                    campaign.fraudAnalysis?.riskLevel === 'Very High'
+                        ? 'bg-red-700 w-full'
+                        : campaign.fraudAnalysis?.riskLevel === 'High'
+                        ? 'bg-red-500 w-2.5/3'
+                        : campaign.fraudAnalysis?.riskLevel === 'Medium'
+                        ? 'bg-yellow-500 w-2/3'
+                        : 'bg-green-500 w-1/3'
+                }`}
+            />
+        </div>
+    </div>
+    <p className="text-xs text-green-500 mb-2">Recommendation: <span className="text-gray-500">{campaign.fraudAnalysis?.recommendation}</span></p>
+    {campaign.fraudAnalysis?.indicators.map((indicator, index) => (
+        <div key={index} className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+            <span className="font-semibold ">{indicator.type}:</span>
+            <span>{indicator.severity}<span className="text-black font-semibold">({indicator.description})</span></span>
+        </div>
+    ))}
+</div>
 
                             {campaign.status === "rejected" && (
                                 <div className="bg-red-50 border border-red-100 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">

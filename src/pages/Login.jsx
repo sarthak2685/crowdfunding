@@ -9,6 +9,8 @@ import { AtSign, Lock, Eye, EyeOff } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 const LabeledInput = ({
     icon: Icon,
     label,
@@ -53,6 +55,11 @@ const Login = () => {
 
         if (!email || !password) {
             toast.error("Please enter both email and password");
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            toast.error("Please enter a valid email address");
             return;
         }
 
